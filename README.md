@@ -1,4 +1,4 @@
-# hacking
+# Hacking
 
 Collection of sripts and cheat sheets for hacking
 

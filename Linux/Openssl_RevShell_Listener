@@ -1,0 +1,14 @@
+#! /bin/sh
+
+VERSION='20220814'
+
+alias getWlanNetAddress="ip a | grep 'inet' |grep 'wlan0' | sed 's/[ \t]\+/ /g' | cut -d' ' -f3"
+alias getWlanIP="ip a |grep 'inet' |grep 'wlan0' | sed 's/[ \t]\+/ /g' | cut -d' ' -f3 | cut -d'/' -f1" 
+
+myIP=$(getWlanIP)
+port=8080
+
+
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert -days 365 -nodes
+echo "Listen at $myIP port $port"
+openssl s_server -quiet -key key.pem -cert cert -port 8080

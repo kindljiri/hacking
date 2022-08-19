@@ -1,0 +1,9 @@
+#! /bin/sh
+
+alias getWlanNetAddress="ip a | grep 'inet' |grep 'wlan0' | sed 's/[ \t]\+/ /g' | cut -d' ' -f3"
+alias getWlanIP="ip a |grep 'inet' |grep 'wlan0' | sed 's/[ \t]\+/ /g' | cut -d' ' -f3 | cut -d'/' -f1" 
+
+myIP=$(getWlanIP)
+
+echo "Listen at $myIP port 8080"
+nc -lvp 8080

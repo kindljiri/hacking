@@ -12,5 +12,5 @@ And collection of reverse shells
 Collection of revers shells
 
 ## With flipper-zero
-Also check my collection of [BadUSB](https://github.com/kindljiri/flipper-zero/tree/main/badUSB) script for flipper-zero, it contains revershells so if you combine flipper-zero, Andriod phone and termux you can start revershell listener on your phone, update the badUSB reversshell script with your phone IP (when starting listener it will show).
+Also check my collection of [BadUSB](https://github.com/kindljiri/flipper-zero/tree/main/badUSB) script for flipper-zero, it contains revershells so if you combine flipper-zero, Andriod phone and [termux](https://f-droid.org/en/packages/com.termux/) you can start revershell listener on your phone, update the badUSB reversshell script with your phone IP (when starting listener it will show).
 Connect flipper to to your target device and run badUSB and enjoy ... ;-)

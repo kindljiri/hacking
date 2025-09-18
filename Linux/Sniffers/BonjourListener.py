@@ -2,7 +2,7 @@ import socket
 import struct
 
 # Optional: Uncomment if you want to parse packets
-# from dnslib import DNSRecord
+from dnslib import DNSRecord
 
 MDNS_GROUP = "224.0.0.251"
 MDNS_PORT = 5353
@@ -31,12 +31,12 @@ try:
         print(ascii_dump(data))
 
         # Optional: Parse with dnslib
-        # try:
-        #     dns = DNSRecord.parse(data)
-        #     print(" Parsed DNS Record:")
-        #     print(dns)
-        # except Exception as e:
-        #     print(f"⚠️ Failed to parse DNS: {e}")
+        try:
+            dns = DNSRecord.parse(data)
+            print(" Parsed DNS Record:")
+            print(dns)
+        except Exception as e:
+            print(f"Failed to parse DNS: {e}")
 
         print("-" * 60)
 except KeyboardInterrupt:

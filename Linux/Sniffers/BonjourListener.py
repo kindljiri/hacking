@@ -5,6 +5,7 @@ import struct
 import json
 import time
 import argparse
+import sys
 from dnslib import DNSRecord
 
 MDNS_GROUP = "224.0.0.251"
@@ -25,9 +26,14 @@ parser.add_argument(
 parser.add_argument(
     "-q", "--quiet",
     action="store_true",
-    help="Suppress stdout output; log only to file if --logfile is set"
+    help="Suppress stdout output; requires --logfile"
 )
 args = parser.parse_args()
+
+# Validate argument combination
+if args.quiet and not args.logfile:
+    print("Error: --quiet requires --logfile. Otherwise, no output will be produced.", file=sys.stderr)
+    sys.exit(1)
 
 # Optional file handle
 log_file = open(args.logfile, "a") if args.logfile else None
@@ -38,7 +44,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind(('', MDNS_PORT))
 
-# 🔗 Join multicast group
+# Join multicast group
 mreq = struct.pack("4sl", socket.inet_aton(MDNS_GROUP), socket.INADDR_ANY)
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 

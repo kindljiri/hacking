@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LED Matrix Hex Tool</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #grid { display: grid; grid-template-columns: repeat(16, 24px); grid-gap: 4px; }
+    .cell {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1px solid #aaa;
+      background: #fff;
+      cursor: pointer;
+    }
+    .cell.on { background: #2196f3; }
+    #output { margin-top: 15px; font-family: monospace; }
+  </style>
+</head>
+<body>
+
+<h2>8×16 LED Matrix → Hex</h2>
+<p>Click cells to toggle. Top row is y=0, left column is x=0.</p>
+
+<div id="grid"></div>
+
+<button id="clearBtn">Clear</button>
+
+<div id="output"></div>
+
+<script>
+  const rows = 8;
+  const cols = 16;
+  const gridEl = document.getElementById('grid');
+  const outputEl = document.getElementById('output');
+  const clearBtn = document.getElementById('clearBtn');
+
+  // Create cells with data-x, data-y
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.x = x;
+      cell.dataset.y = y;
+      cell.addEventListener('click', () => {
+        cell.classList.toggle('on');
+        updateHex();
+      });
+      gridEl.appendChild(cell);
+    }
+  }
+
+  clearBtn.addEventListener('click', () => {
+    document.querySelectorAll('.cell.on').forEach(c => c.classList.remove('on'));
+    updateHex();
+  });
+
+  function updateHex() {
+    let bytes = [];
+    for (let x = 0; x < cols; x++) {
+      let byte = 0;
+      for (let y = 0; y < rows; y++) {
+        const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+        if (cell.classList.contains('on')) {
+          // bit 7 = y=0 (top), bit 0 = y=7 (bottom)
+          const bit = 7 - y;
+          byte |= (1 << bit);
+        }
+      }
+      bytes.push(byte);
+    }
+
+    // Convert to hex string like e00d0000...
+    const hexString = bytes
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    outputEl.textContent = 'Hex: ' + hexString;
+  }
+
+  // Initial
+  updateHex();
+</script>
+
+</body>
+</html>

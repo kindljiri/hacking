@@ -1,0 +1,80 @@
+Filetype: IR signals file
+Version: 1
+# 
+name: On
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 00 00 00 00
+# 
+name: Off
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 02 00 00 00
+# 
+name: M1
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 04 00 00 00
+# 
+name: M2
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 06 00 00 00
+# 
+name: M3
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 08 00 00 00
+# 
+name: M4
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 0A 00 00 00
+# 
+name: M5
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 0C 00 00 00
+# 
+name: M6
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 0E 00 00 00
+# 
+name: M7
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 10 00 00 00
+# 
+name: M8_favourite
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 12 00 00 00
+# 
+name: Dim-
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 14 00 00 00
+# 
+name: Dim+
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 16 00 00 00
+# 
+name: Timer
+type: parsed
+protocol: NEC
+address: 02 00 00 00
+command: 01 00 00 00

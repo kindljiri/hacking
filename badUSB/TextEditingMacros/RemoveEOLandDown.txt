@@ -1,0 +1,4 @@
+REM Remove End of the line and move line down
+END
+DEL
+DOWN

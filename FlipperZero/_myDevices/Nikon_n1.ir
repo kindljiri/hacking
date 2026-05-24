@@ -1,0 +1,8 @@
+Filetype: IR signals file
+Version: 1
+# 
+name: Nikon_n1_remote
+type: raw
+frequency: 38000
+duty_cycle: 0.330000
+data: 1986 27096 442 1470 433 3487 435

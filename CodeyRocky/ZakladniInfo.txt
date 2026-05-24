@@ -1,0 +1,33 @@
+#Hardware specs:
+
+| Main control/chip | ESP32 |
+| Processor | Tensilica LX6 dual-core processor |
+| Clock speed | 240 MHz（Max）|
+| Onboard sensor | RGB LED module, button, potentiometer, sound sensor, light sensor, gyroscope, accelerometer, IR emitter, IR receiver, IR color sensor, LED matrix, speaker |
+| Coding language | Block-based, Python |
+| Battery (included) | 3.7V rechargeable LiPo battery |
+| Battery capacity | 950mAh |
+| Playtime | ≈1- 2 hours |
+| Charge time | ≈ 1.5 hours |
+| Rotational speed | 250RPM |
+| Communication mode | USB, Bluetooth, Wi-Fi |
+| Compatibility | LEGO bricks |
+
+# Dimentions:
+
+| Wheel diametr |35.16|
+| Rocky width |96.62|
+| Rocky Lenght |102.46|
+| Rocky+Codey Hight |102.54|
+
+## Obstacle Detection Distance (IR Sensor)
+
+| Speed (%) | Mean detection distance (mm) | Std dev (mm) | Notes |
+|-----------|-------------------------------|---------------|-------|
+| 5% | | | |
+| 10% | | | |
+| 20% | | | |
+| 30% | | | |
+| 50% | | | |
+| 100% | | | |
+

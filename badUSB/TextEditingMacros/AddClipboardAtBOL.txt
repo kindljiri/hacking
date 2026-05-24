@@ -1,0 +1,4 @@
+REM Add content of Clipboard to Begining of the line
+HOME
+CTRL V
+DOWN

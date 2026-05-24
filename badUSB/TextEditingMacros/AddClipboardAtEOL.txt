@@ -1,0 +1,4 @@
+REM Add content of Clipboard to End of the line
+END
+CTRL V
+DOWN

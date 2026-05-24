@@ -4,16 +4,21 @@
 
 First we need to capture some handshakes.
 - Under Wifi Atks pick Target Atks
+
 ![Wifi_PassRecovery_01](Wifi_PassRecovery_01.jpg)
 ![Wifi_PassRecovery_02](Wifi_PassRecovery_02.jpg)
 ![Wifi_PassRecovery_03](Wifi_PassRecovery_03.jpg)
 - Choose SSID
+
 ![Wifi_PassRecovery_04](Wifi_PassRecovery_04.jpg)
 - Capture Handshake and wait
+
 ![Wifi_PassRecovery_05](Wifi_PassRecovery_05.jpg)
 - You can press Mid button to deauth which will force client to reconnect and you got handshake.
+
 ![Wifi_PassRecovery_06](Wifi_PassRecovery_06.jpg)
 - And eventually ...
+
 ![Wifi_PassRecovery_07](Wifi_PassRecovery_07.jpg)
 
 Once we have captured the packets we need we can try recover it using wordlist.

@@ -1,4 +1,6 @@
-#UART
+[Main Page](README.md)
+
+# UART
 
 Uses:
 - 3.3V Logic
@@ -7,7 +9,7 @@ Uses:
 - 1 Stop bit
 - 8 bits
 
-##Pin layout
+## Pin layout
 
 ```
 1 2 3 _ 5
@@ -21,3 +23,4 @@ C       D
 ![zyxel-UART](zyxel-UART.png)
 
 
+[Main Page](README.md)

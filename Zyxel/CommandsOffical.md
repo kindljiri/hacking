@@ -1,4 +1,8 @@
-When you loggin via SSH,Telnet or UART, you are presented with the limited "shell"
+[Main Page](README.md)
+
+# Avialable Commands
+When you loggin via SSH,Telnet or UART, you are presented with the limited "shell".
+But still there seems to be some familiar linux commands adn the **echo** will proof to be big helper.
 
 ```
 > help
@@ -68,3 +72,5 @@ igmp
 btt
 Ledctl
 ```
+
+[Main Page](README.md)

@@ -1,4 +1,6 @@
-#Hardware specs:
+[Main Page](README.md)
+
+# Hardware specs:
 
 | Main control/chip | ESP32 |
 | Processor | Tensilica LX6 dual-core processor |
@@ -31,3 +33,4 @@
 | 50% | | | |
 | 100% | | | |
 
+[Main Page](README.md)

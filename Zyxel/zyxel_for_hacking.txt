@@ -1,0 +1,112 @@
+
+join    Join a specified network SSID.
+        Usage: join <ssid> [key <0-3>:xxxxx] [imode bss|ibss] [amode open|shared|openshared|wpa|wpapsk|wpa2|wpa2psk|wpanone] [options]
+        Options:
+        -b MAC, --bssid=MAC     BSSID (xx:xx:xx:xx:xx:xx) to scan and join
+        -c CL, --chanspecs=CL   chanspecs (comma or space separated list)
+
+
+wl scan
+wl scanresults
+SSID: "g-net-vodafone"
+Mode: Managed   RSSI: -60 dBm   SNR: 0 dB       noise: -79 dBm  Channel: 11
+BSSID: 34:E1:A9:61:7D:87        Capability: ESS WEP ShortPre ShortSlot 
+Supported Rates: [ 1(b) 2(b) 5.5(b) 11(b) 6(b) 9 12(b) 18 24(b) 36 48 54 ]
+RSN:
+        multicast cipher: AES-CCMP
+        unicast ciphers(1): AES-CCMP 
+        AKM Suites(1): WPA-PSK 
+        Capabilities(0x000c): No Pre-Auth, Pairwise, 16 PTK Replay Ctrs1 GTK Replay Ctr
+VHT Capable:
+        Chanspec: 2.4GHz channel 11 20MHz (0x100b)
+        Primary channel: 11
+        HT Capabilities: SGI20 
+        Supported MCS : [ 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 96 ]
+        VHT Capabilities: 
+        Supported VHT (tx) Rates:
+                NSS: 1 MCS: 0-9
+                NSS: 2 MCS: 0-9
+                NSS: 3 MCS: 0-9
+                NSS: 4 MCS: 0-9
+        Supported VHT (rx) Rates:
+                NSS: 1 MCS: 0-9
+                NSS: 2 MCS: 0-9
+                NSS: 3 MCS: 0-9
+                NSS: 4 MCS: 0-9
+WPS: V2.0 Configured
+
+SSID: "g-net"
+Mode: Managed   RSSI: -65 dBm   SNR: 0 dB       noise: -87 dBm  Flags: RSSI on-channel  Channel: 1
+BSSID: 2C:C8:1B:FD:2E:BE        Capability: ESS WEP ShortPre ShortSlot 
+Supported Rates: [ 1(b) 2(b) 5.5(b) 11(b) 6 9 12 18 24 36 48 54 ]
+WPA:
+        multicast cipher: AES-CCMP
+        unicast ciphers(1): AES-CCMP 
+        AKM Suites(1): WPA-PSK 
+        No WPA Capabilities advertised
+RSN:
+        multicast cipher: AES-CCMP
+        unicast ciphers(1): AES-CCMP 
+        AKM Suites(1): WPA-PSK 
+        Capabilities(0x0000): No Pre-Auth, Pairwise, 1 PTK Replay Ctr1 GTK Replay Ctr
+HT Capable:
+        Chanspec: 2.4GHz channel 3 40MHz (0x1803)
+        Primary channel: 1
+        HT Capabilities: 40Mhz SGI20 SGI40 
+        Supported MCS : [ 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ]
+WPS: V1.0 Configured
+
+SSID: "g-net_upstairs"
+Mode: Managed   RSSI: -71 dBm   SNR: 0 dB       noise: -87 dBm  Flags: RSSI on-channel  Channel: 1
+BSSID: 5C:A6:E6:83:7F:58        Capability: ESS WEP ShortSlot 
+Supported Rates: [ 1(b) 2(b) 5.5(b) 11(b) 9 18 36 54 6 12 24 48 ]
+RSN:
+        multicast cipher: AES-CCMP
+        unicast ciphers(1): AES-CCMP 
+        AKM Suites(1): WPA-PSK 
+        Capabilities(0x0000): No Pre-Auth, Pairwise, 1 PTK Replay Ctr1 GTK Replay Ctr
+HT Capable:
+        Chanspec: 2.4GHz channel 3 40MHz (0x1803)
+        Primary channel: 1
+        HT Capabilities: 40Mhz SGI20 SGI40 
+        Supported MCS : [ 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 32 ]
+
+SSID: "O2-Internet-486"
+Mode: Managed   RSSI: -76 dBm   SNR: 0 dB       noise: -87 dBm  Flags: RSSI on-channel  Channel: 5
+BSSID: 14:36:0E:73:CD:11        Capability: ESS WEP ShortSlot 
+Supported Rates: [ 1(b) 2(b) 5.5(b) 11(b) 9 18 36 54 6 12 24 48 ]
+RSN:
+        multicast cipher: AES-CCMP
+        unicast ciphers(1): AES-CCMP 
+        AKM Suites(1): WPA-PSK 
+        Capabilities(0x0080): No Pre-Auth, Pairwise, 1 PTK Replay Ctr1 GTK Replay Ctr
+HT Capable:
+        Chanspec: 2.4GHz channel 3 40MHz (0x1903)
+        Primary channel: 5
+        HT Capabilities: 40Mhz SGI20 SGI40 
+        Supported MCS : [ 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 32 ]
+WPS: V2.0 Configured
+
+SSID: "CoffeeAndUnicorns"
+Mode: Managed   RSSI: -85 dBm   SNR: 0 dB       noise: -87 dBm  Flags: RSSI on-channel  Channel: 6
+BSSID: 9C:9D:7E:2B:FE:13        Capability: ESS WEP ShortSlot 
+Supported Rates: [ 1(b) 2(b) 5.5(b) 11(b) 9 18 36 54 6 12 24 48 ]
+WPA:
+        multicast cipher: TKIP
+        unicast ciphers(2): TKIP AES-CCMP 
+        AKM Suites(1): WPA-PSK 
+        No WPA Capabilities advertised
+RSN:
+        multicast cipher: TKIP
+        unicast ciphers(2): TKIP AES-CCMP 
+        AKM Suites(1): WPA-PSK 
+        Capabilities(0x0000): No Pre-Auth, Pairwise, 1 PTK Replay Ctr1 GTK Replay Ctr
+HT Capable:
+        Chanspec: 2.4GHz channel 6 20MHz (0x1006)
+        Primary channel: 6
+        HT Capabilities: SGI20 
+        Supported MCS : [ 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ]
+WPS: V2.0 Configured
+
+
+wl join - unsupported

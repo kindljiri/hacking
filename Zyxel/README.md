@@ -4,4 +4,4 @@ I have the admin password so it will not cover the way to get it.
 
 By doing the [portscan](OpenPorts.md) and openning the device there are two ways in:
 - Telnet
-- UART
+- [UART](UART.md)

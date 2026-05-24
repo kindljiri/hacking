@@ -24,15 +24,20 @@ First we need to capture some handshakes.
 Once we have captured the packets we need we can try recover it using wordlist.
 ![Wifi_PassRecovery_08](Wifi_PassRecovery_08.jpg)
 - Pick the wordlist
+
 ![Wifi_PassRecovery_09](Wifi_PassRecovery_09.jpg)
 - Then the pcap file with hanshake we captured previously
+
 ![Wifi_PassRecovery_10](Wifi_PassRecovery_10.jpg)
 ![Wifi_PassRecovery_11](Wifi_PassRecovery_11.jpg)
 - Pick the SSID
+
 ![Wifi_PassRecovery_12](Wifi_PassRecovery_12.jpg)
 - Wait and pray
+
 ![Wifi_PassRecovery_13](Wifi_PassRecovery_13.jpg)
 - And if you lucky enough, or admin is lazy ...
+
 ![Wifi_PassRecovery_14](Wifi_PassRecovery_14.jpg)
 
 

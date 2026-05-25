@@ -83,12 +83,12 @@ def Battery():
 
     while True:
         # Read IR
-        proto, value = codey.ir.receive_remote_code()
+        nec_address, nec_command = codey.ir.receive_remote_code()
 
-        if value != 0:
+        if nec_command != 0:
 
             # INFO (20) → toggle mode
-            if proto == 1 and value == 20:
+            if nec_address == 1 and nec_command == 20:
                 if show_mode == 0:
                     show_mode = 1
                 elif show_mode == 1:
@@ -97,7 +97,7 @@ def Battery():
                     show_mode = 0
 
             # EXIT (86)
-            elif proto == 1 and value == 86:
+            elif nec_address == 1 and nec_command == 86:
                 codey.led.off()
                 codey.display.show("Menu:") #Because return to MainMenu will not redraw display
                 return
@@ -120,11 +120,11 @@ def Dice():
     
     while True:
         # Read IR
-        proto, value = codey.ir.receive_remote_code()
+        nec_address, nec_command = codey.ir.receive_remote_code()
         
-        if value != 0:
+        if nec_command != 0:
             # EXIT (86)
-            if proto == 1 and value == 86:
+            if nec_address == 1 and nec_command == 86:
                 codey.led.off()
                 codey.display.show("Menu:") #Because return to MainMenu will not redraw display
                 return
@@ -156,83 +156,83 @@ def IRDrive():
             time.sleep(0.3)
             codey.display.show_image(sun_glasses, 0, 0)
 
-        proto, value = codey.ir.receive_remote_code()
+        nec_address, nec_command = codey.ir.receive_remote_code()
 
-        if value != 0:
+        if nec_command != 0:
 
             # Power
-            if proto == 1 and value == 25:
+            if nec_address == 1 and nec_command == 25:
                 rocky.stop()
 
             # Red (-1)
-            elif proto == 1 and value == 82:
+            elif nec_address == 1 and nec_command == 82:
                 speed = speed - 1
                 if speed < 0:
                     speed = 0
                 codey.display.show(speed)
 
             # Green (+1)
-            elif proto == 1 and value == 87:
+            elif nec_address == 1 and nec_command == 87:
                 speed = speed + 1
                 if speed > 100:
                     speed = 100
                 codey.display.show(speed)
 
             # Yellow (90° left)
-            elif proto == 1 and value == 30:
+            elif nec_address == 1 and nec_command == 30:
                 rocky.turn_left_by_degree(90, speed)
 
             # Blue (180° left)
-            elif proto == 1 and value == 17:
+            elif nec_address == 1 and nec_command == 17:
                 rocky.turn_left_by_degree(180, speed)
 
             # Rew (<<) -1
-            elif proto == 1 and value == 74:
+            elif nec_address == 1 and nec_command == 74:
                 speed = speed - 1
                 if speed < 0:
                     speed = 0
                 codey.display.show(speed)
 
             # Fwd (>>) +1
-            elif proto == 1 and value == 8:
+            elif nec_address == 1 and nec_command == 8:
                 speed = speed + 1
                 if speed > 100:
                     speed = 100
                 codey.display.show(speed)
 
             # Prew (|<<) -10
-            elif proto == 1 and value == 85:
+            elif nec_address == 1 and nec_command == 85:
                 speed = speed - 10
                 if speed < 0:
                     speed = 0
                 codey.display.show(speed)
 
             # Next (>>|) +10
-            elif proto == 1 and value == 67:
+            elif nec_address == 1 and nec_command == 67:
                 speed = speed + 10
                 if speed > 100:
                     speed = 100
                 codey.display.show(speed)
 
             # Info
-            elif proto == 1 and value == 20:
+            elif nec_address == 1 and nec_command == 20:
                 codey.display.show(speed)
                 #codey.broadcast("Speed:" + str(speed))
 
             # Menu
-            elif proto == 1 and value == 73:
+            elif nec_address == 1 and nec_command == 73:
                 codey.led.off()
                 codey.display.show("Menu:")
                 return
 
             # Exit
-            elif proto == 1 and value == 86:
+            elif nec_address == 1 and nec_command == 86:
                 codey.led.off()
                 codey.display.show("Menu:")
                 return
 
             # Up (forward)
-            elif proto == 1 and value == 80:
+            elif nec_address == 1 and nec_command == 80:
                 if rocky.color_ir_sensor.is_obstacle_ahead() and obstacle_detection:
                     rocky.stop()
                     codey.led.show(255, 0, 0)
@@ -243,25 +243,25 @@ def IRDrive():
                     codey.display.show_image(sun_glasses, 0, 0)
 
             # Down (backward)
-            elif proto == 1 and value == 18:
+            elif nec_address == 1 and nec_command == 18:
                 rocky.backward(speed)
                 codey.display.show_image(sun_glasses, 0, 0)
                 codey.led.show(0, 255, 0)
 
             # Right
-            elif proto == 1 and value == 23:
+            elif nec_address == 1 and nec_command == 23:
                 rocky.turn_right(speed)
                 codey.display.show_image(sun_glasses, 0, 0)
                 codey.led.show(0, 255, 0)
 
             # Left
-            elif proto == 1 and value == 22:
+            elif nec_address == 1 and nec_command == 22:
                 rocky.turn_left(speed)
                 codey.display.show_image(sun_glasses, 0, 0)
                 codey.led.show(0, 255, 0)
 
             # Play → disable obstacle detection for 60 seconds
-            elif proto == 1 and value == 91:
+            elif nec_address == 1 and nec_command == 91:
                 obstacle_detection = False
                 obstacle_detection_until = time.time() + 60
                 codey.display.show("OD OFF")
@@ -269,7 +269,7 @@ def IRDrive():
                 codey.display.show_image(sun_glasses, 0, 0)
 
             # Stop → enable obstacle detection immediately
-            elif proto == 1 and value == 68:
+            elif nec_address == 1 and nec_command == 68:
                 obstacle_detection = True
                 obstacle_detection_until = 0
                 codey.display.show("OD ON")
@@ -281,7 +281,7 @@ def IRDrive():
 
             
 def MainMenu():
-    menu = ["Menu:", "IRDrive", "Battery", "Dice "]
+    menu = ["Menu:", "IRDrive", "Battery", " Dice"]
     menu_index = 0
     last_index = -1   # force initial refresh
      
@@ -290,29 +290,29 @@ def MainMenu():
     codey.broadcast("Menu")
 
     while True:
-        proto, value = codey.ir.receive_remote_code()
+        nec_address, nec_command = codey.ir.receive_remote_code()
 
-        if value != 0:
+        if nec_command != 0:
 
             # UP (80)
-            if proto == 1 and value == 80:
+            if nec_address == 1 and nec_command == 80:
                 menu_index = menu_index - 1
                 if menu_index < 0:
                     menu_index = len(menu) - 1
 
             # DOWN (18)
-            elif proto == 1 and value == 18:
+            elif nec_address == 1 and nec_command == 18:
                 menu_index = menu_index + 1
                 if menu_index >= len(menu):
                     menu_index = 0
 
             # OK 
-            elif proto == 1 and value == 19:
+            elif nec_address == 1 and nec_command == 19:
                 if menu[menu_index] == "IRDrive":
                     IRDrive()
                 elif menu[menu_index] == "Battery":
                     Battery()
-                elif menu[menu_index] == "Dice ":
+                elif menu[menu_index] == " Dice":
                     Dice()
 
         # Only refresh display if index changed
@@ -341,12 +341,12 @@ def button_b_cb():
     last = None
 
     while True:
-        proto, value = codey.ir.receive_remote_code()
+        nec_address, nec_command = codey.ir.receive_remote_code()
 
-        if value != 0 and value != last:
-            text = "{}:{}".format(proto, value)
+        if nec_command != 0 and nec_command != last:
+            text = "{}:{}".format(nec_address, nec_command)
             codey.display.show(text)
-            last = value
+            last = nec_command
 
         time.sleep(0.05)
 

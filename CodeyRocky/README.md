@@ -18,15 +18,37 @@ B) NEC Ir Decoder - display the NEC Codes in format of Address:Command
 C) No function yet
 
 ### Infrared Remote controled Menu
-Offer functionalities controled by Infrared remote. 
+Offer functionalities controled by Infrared remote. I use this [Emos](EmosIr.md)
 You will need to find your Address and Commands, and update code accordingly to use your remote.
+I use the Arrows, OK, Exit for basic navigation.
 Main Menu:
 - IRDrive
 - Batter
 - Dice
 
 #### IRDrive
-Let you drive the Codey Rocky with Ir Remote Control.
+Let you drive the Codey Rocky with Ir Remote Control. 
+I use this [Emos](EmosIr.md)
+
+|Button|Function|
+|------|--------|
+|Up Arrow|Go forward|
+|Down Arrow|Go backward|
+|Right Arrow|Turn Right|
+|Left Arrow|Turn Left|
+|Red|Speed -1%|
+|Green|Speed +1%|
+|Yellow|Turn 90° left|
+|Blue|Turn 180° left|
+|Rew| (<<)|Speed -1%|
+|Fwd (>>)|Speed +1%|
+|Prew (\|<<)|Speed -10%|
+|Next (>>\|)|Speed +10%|
+|Info|Show actuall speed in %|
+|Menu|Return to menu|
+|Exit|Return to menu|
+|Play|disable obstacle detection for 60 seconds|
+|Stop|enable obstacle detection immediately|
 
 #### Battery
 Provide info on battery % and Voltage.

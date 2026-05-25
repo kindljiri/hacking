@@ -17,6 +17,8 @@
 
 # Dimentions:
 
+| Dimentions | mm |
+|------------|----|
 | Wheel diametr |35.16|
 | Rocky width |96.62|
 | Rocky Lenght |102.46|

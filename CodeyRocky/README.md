@@ -36,7 +36,5 @@ With Exit button, it returns you to Main Menu
 Shake the Codey and you got random number from 1 to 6.
 With Exit button, it returns you to Main Menu
 
-
-
 ### NEC Ir Decoder
 Display the NEC Codes in format of Address:Command

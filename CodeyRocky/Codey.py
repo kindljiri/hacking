@@ -14,7 +14,7 @@ import random
 #
 # ##EMOS Ir codes 
 # EMOS is NEC coded remote below is mapping of codes(DEC) to buttons on remote
-#|Button|Proto|Value|
+#|Button|Address|Command|
 #|Power|1|25|
 #|Mute|1|5|
 #|Red|1|82|
@@ -59,6 +59,54 @@ import random
 #|Recall|1|27|
 #|TV/Radio|1|81|
 
+def NECCommandName(cmd):
+    if cmd == 25:  return "Power"
+    elif cmd == 5:  return "Mute"
+    elif cmd == 82: return "Red"
+    elif cmd == 87: return "Green"
+    elif cmd == 30: return "Yellow"
+    elif cmd == 17: return "Blue"
+    elif cmd == 74: return "Rew"
+    elif cmd == 8:  return "Fwd"
+    elif cmd == 85: return "Prev"
+    elif cmd == 67: return "Next"
+    elif cmd == 91: return "Play"
+    elif cmd == 7:  return "Pause"
+    elif cmd == 68: return "Stop"
+    elif cmd == 79: return "USB"
+    elif cmd == 12: return "Sub"
+    elif cmd == 94: return "Text"
+    elif cmd == 66: return "Goto"
+    elif cmd == 64: return "Audio"
+    elif cmd == 88: return "EPG"
+    elif cmd == 20: return "Info"
+    elif cmd == 73: return "Menu"
+    elif cmd == 86: return "Exit"
+    elif cmd == 80: return "Up"
+    elif cmd == 18: return "Down"
+    elif cmd == 23: return "Right"
+    elif cmd == 22: return "Left"
+    elif cmd == 19: return "OK"
+    elif cmd == 16: return "Vol+"
+    elif cmd == 116: return "Vol-"
+    elif cmd == 216: return "Ch+"
+    elif cmd == 316: return "Ch-"
+    elif cmd == 1:  return "1"
+    elif cmd == 9:  return "2"
+    elif cmd == 13: return "3"
+    elif cmd == 2:  return "4"
+    elif cmd == 10: return "5"
+    elif cmd == 14: return "6"
+    elif cmd == 3:  return "7"
+    elif cmd == 11: return "8"
+    elif cmd == 15: return "9"
+    elif cmd == 65: return "0"
+    elif cmd == 27: return "Recall"
+    elif cmd == 81: return "TV/Radio"
+
+    return "Unknown"
+
+
 def Battery():
     # Read battery percentage
     p = codey.battery.get_percentage()
@@ -84,11 +132,12 @@ def Battery():
     while True:
         # Read IR
         nec_address, nec_command = codey.ir.receive_remote_code()
+        nec_cmd_name = NECCommandName(nec_command)
 
-        if nec_command != 0:
+        if nec_address == 1 and nec_command != 0:
 
-            # INFO (20) → toggle mode
-            if nec_address == 1 and nec_command == 20:
+            # INFO (20) - toggle mode
+            if nec_cmd_name == "Info":
                 if show_mode == 0:
                     show_mode = 1
                 elif show_mode == 1:
@@ -97,7 +146,7 @@ def Battery():
                     show_mode = 0
 
             # EXIT (86)
-            elif nec_address == 1 and nec_command == 86:
+            elif nec_cmd_name == "Exit":
                 codey.led.off()
                 codey.display.show("Menu:") #Because return to MainMenu will not redraw display
                 return
@@ -121,10 +170,11 @@ def Dice():
     while True:
         # Read IR
         nec_address, nec_command = codey.ir.receive_remote_code()
-        
-        if nec_command != 0:
+        nec_cmd_name = NECCommandName(nec_command)
+
+        if nec_address == 1 and nec_command != 0:
             # EXIT (86)
-            if nec_address == 1 and nec_command == 86:
+            if nec_cmd_name == "Exit":
                 codey.led.off()
                 codey.display.show("Menu:") #Because return to MainMenu will not redraw display
                 return
@@ -157,82 +207,83 @@ def IRDrive():
             codey.display.show_image(sun_glasses, 0, 0)
 
         nec_address, nec_command = codey.ir.receive_remote_code()
+        nec_cmd_name = NECCommandName(nec_command)
 
-        if nec_command != 0:
+        if nec_address == 1 and nec_command != 0:
 
             # Power
-            if nec_address == 1 and nec_command == 25:
+            if nec_cmd_name == "Power":
                 rocky.stop()
 
             # Red (-1)
-            elif nec_address == 1 and nec_command == 82:
+            elif nec_cmd_name == "Red":
                 speed = speed - 1
                 if speed < 0:
                     speed = 0
                 codey.display.show(speed)
 
             # Green (+1)
-            elif nec_address == 1 and nec_command == 87:
+            elif nec_cmd_name == "Green":
                 speed = speed + 1
                 if speed > 100:
                     speed = 100
                 codey.display.show(speed)
 
             # Yellow (90° left)
-            elif nec_address == 1 and nec_command == 30:
+            elif nec_cmd_name == "Yellow":
                 rocky.turn_left_by_degree(90, speed)
 
             # Blue (180° left)
-            elif nec_address == 1 and nec_command == 17:
+            elif nec_cmd_name == "Blue":
                 rocky.turn_left_by_degree(180, speed)
 
             # Rew (<<) -1
-            elif nec_address == 1 and nec_command == 74:
+            elif nec_cmd_name == "Rew":
                 speed = speed - 1
                 if speed < 0:
                     speed = 0
                 codey.display.show(speed)
 
             # Fwd (>>) +1
-            elif nec_address == 1 and nec_command == 8:
+            elif nec_cmd_name == "Fwd":
                 speed = speed + 1
                 if speed > 100:
                     speed = 100
                 codey.display.show(speed)
 
-            # Prew (|<<) -10
-            elif nec_address == 1 and nec_command == 85:
+            # Prev (|<<) -10
+            elif nec_cmd_name == "Prev":
                 speed = speed - 10
                 if speed < 0:
                     speed = 0
                 codey.display.show(speed)
 
             # Next (>>|) +10
-            elif nec_address == 1 and nec_command == 67:
+            elif nec_cmd_name == "Next":
                 speed = speed + 10
                 if speed > 100:
                     speed = 100
                 codey.display.show(speed)
 
             # Info
-            elif nec_address == 1 and nec_command == 20:
+            elif nec_cmd_name == "Info":
                 codey.display.show(speed)
                 #codey.broadcast("Speed:" + str(speed))
 
             # Menu
-            elif nec_address == 1 and nec_command == 73:
+            elif nec_cmd_name == "Menu":
                 codey.led.off()
                 codey.display.show("Menu:")
                 return
 
             # Exit
-            elif nec_address == 1 and nec_command == 86:
+            elif nec_cmd_name == "Exit":
                 codey.led.off()
                 codey.display.show("Menu:")
                 return
 
             # Up (forward)
-            elif nec_address == 1 and nec_command == 80:
+            elif nec_cmd_name == "Up":
                 if rocky.color_ir_sensor.is_obstacle_ahead() and obstacle_detection:
                     rocky.stop()
                     codey.led.show(255, 0, 0)
@@ -243,33 +294,33 @@ def IRDrive():
                     codey.display.show_image(sun_glasses, 0, 0)
 
             # Down (backward)
-            elif nec_address == 1 and nec_command == 18:
+            elif nec_cmd_name == "Down":
                 rocky.backward(speed)
                 codey.display.show_image(sun_glasses, 0, 0)
                 codey.led.show(0, 255, 0)
 
             # Right
-            elif nec_address == 1 and nec_command == 23:
+            elif nec_cmd_name == "Right":
                 rocky.turn_right(speed)
                 codey.display.show_image(sun_glasses, 0, 0)
                 codey.led.show(0, 255, 0)
 
             # Left
-            elif nec_address == 1 and nec_command == 22:
+            elif nec_cmd_name == "Left": 
                 rocky.turn_left(speed)
                 codey.display.show_image(sun_glasses, 0, 0)
                 codey.led.show(0, 255, 0)
 
-            # Play → disable obstacle detection for 60 seconds
-            elif nec_address == 1 and nec_command == 91:
+            # Play - disable obstacle detection for 60 seconds
+            elif nec_cmd_name == "Play":
                 obstacle_detection = False
                 obstacle_detection_until = time.time() + 60
                 codey.display.show("OD OFF")
                 time.sleep(0.3)
                 codey.display.show_image(sun_glasses, 0, 0)
 
-            # Stop → enable obstacle detection immediately
-            elif nec_address == 1 and nec_command == 68:
+            # Stop - enable obstacle detection immediately
+            elif nec_cmd_name == "Stop": 
                 obstacle_detection = True
                 obstacle_detection_until = 0
                 codey.display.show("OD ON")
@@ -291,23 +342,24 @@ def MainMenu():
 
     while True:
         nec_address, nec_command = codey.ir.receive_remote_code()
+        nec_cmd_name = NECCommandName(nec_command)
 
-        if nec_command != 0:
+        if nec_address == 1 and nec_command != 0:
 
             # UP (80)
-            if nec_address == 1 and nec_command == 80:
+            if nec_cmd_name == "Up":
                 menu_index = menu_index - 1
                 if menu_index < 0:
                     menu_index = len(menu) - 1
 
             # DOWN (18)
-            elif nec_address == 1 and nec_command == 18:
+            elif nec_cmd_name == "Down":
                 menu_index = menu_index + 1
                 if menu_index >= len(menu):
                     menu_index = 0
 
             # OK 
-            elif nec_address == 1 and nec_command == 19:
+            elif nec_cmd_name == "OK":
                 if menu[menu_index] == "IRDrive":
                     IRDrive()
                 elif menu[menu_index] == "Battery":

@@ -13,9 +13,9 @@ Is small "OS" written in python and currently in alpha
 [G33kOS](Codey.py)
 
 Functions assigned to buttons:
-A) Infrared Remote controled Menu
-B) NEC Ir Decoder - display the NEC Codes in format of Address:Command
-C) No function yet
+- A) Infrared Remote controled Menu
+- B) NEC Ir Decoder - display the NEC Codes in format of Address:Command
+- C) No function yet
 
 ### Infrared Remote controled Menu
 Offer functionalities controled by Infrared remote. I use this [Emos](EmosIr.md)
@@ -40,9 +40,9 @@ I use this [Emos](EmosIr.md)
 |Green|Speed +1%|
 |Yellow|Turn 90° left|
 |Blue|Turn 180° left|
-|Rew| (<<)|Speed -1%|
+|Rew (<<)|Speed -1%|
 |Fwd (>>)|Speed +1%|
-|Prew (\|<<)|Speed -10%|
+|Prev (\|<<)|Speed -10%|
 |Next (>>\|)|Speed +10%|
 |Info|Show actuall speed in %|
 |Menu|Return to menu|

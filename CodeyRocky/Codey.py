@@ -59,50 +59,51 @@ import random
 #|Recall|1|27|
 #|TV/Radio|1|81|
 
-def NECCommandName(cmd):
-    if cmd == 25:  return "Power"
-    elif cmd == 5:  return "Mute"
-    elif cmd == 82: return "Red"
-    elif cmd == 87: return "Green"
-    elif cmd == 30: return "Yellow"
-    elif cmd == 17: return "Blue"
-    elif cmd == 74: return "Rew"
-    elif cmd == 8:  return "Fwd"
-    elif cmd == 85: return "Prev"
-    elif cmd == 67: return "Next"
-    elif cmd == 91: return "Play"
-    elif cmd == 7:  return "Pause"
-    elif cmd == 68: return "Stop"
-    elif cmd == 79: return "USB"
-    elif cmd == 12: return "Sub"
-    elif cmd == 94: return "Text"
-    elif cmd == 66: return "Goto"
-    elif cmd == 64: return "Audio"
-    elif cmd == 88: return "EPG"
-    elif cmd == 20: return "Info"
-    elif cmd == 73: return "Menu"
-    elif cmd == 86: return "Exit"
-    elif cmd == 80: return "Up"
-    elif cmd == 18: return "Down"
-    elif cmd == 23: return "Right"
-    elif cmd == 22: return "Left"
-    elif cmd == 19: return "OK"
-    elif cmd == 16: return "Vol+"
-    elif cmd == 116: return "Vol-"
-    elif cmd == 216: return "Ch+"
-    elif cmd == 316: return "Ch-"
-    elif cmd == 1:  return "1"
-    elif cmd == 9:  return "2"
-    elif cmd == 13: return "3"
-    elif cmd == 2:  return "4"
-    elif cmd == 10: return "5"
-    elif cmd == 14: return "6"
-    elif cmd == 3:  return "7"
-    elif cmd == 11: return "8"
-    elif cmd == 15: return "9"
-    elif cmd == 65: return "0"
-    elif cmd == 27: return "Recall"
-    elif cmd == 81: return "TV/Radio"
+def NECCommandName(address,command):
+    if address == 1:
+        if command == 25:  return "Power"
+        elif command == 5:  return "Mute"
+        elif command == 82: return "Red"
+        elif command == 87: return "Green"
+        elif command == 30: return "Yellow"
+        elif command == 17: return "Blue"
+        elif command == 74: return "Rew"
+        elif command == 8:  return "Fwd"
+        elif command == 85: return "Prev"
+        elif command == 67: return "Next"
+        elif command == 91: return "Play"
+        elif command == 7:  return "Pause"
+        elif command == 68: return "Stop"
+        elif command == 79: return "USB"
+        elif command == 12: return "Sub"
+        elif command == 94: return "Text"
+        elif command == 66: return "Goto"
+        elif command == 64: return "Audio"
+        elif command == 88: return "EPG"
+        elif command == 20: return "Info"
+        elif command == 73: return "Menu"
+        elif command == 86: return "Exit"
+        elif command == 80: return "Up"
+        elif command == 18: return "Down"
+        elif command == 23: return "Right"
+        elif command == 22: return "Left"
+        elif command == 19: return "OK"
+        elif command == 16: return "Vol+"
+        elif command == 116: return "Vol-"
+        elif command == 216: return "Ch+"
+        elif command == 316: return "Ch-"
+        elif command == 1:  return "1"
+        elif command == 9:  return "2"
+        elif command == 13: return "3"
+        elif command == 2:  return "4"
+        elif command == 10: return "5"
+        elif command == 14: return "6"
+        elif command == 3:  return "7"
+        elif command == 11: return "8"
+        elif command == 15: return "9"
+        elif command == 65: return "0"
+        elif command == 27: return "Recall"
+        elif command == 81: return "TV/Radio"
 
     return "Unknown"
 
@@ -132,10 +133,9 @@ def Battery():
     while True:
         # Read IR
         nec_address, nec_command = codey.ir.receive_remote_code()
-        nec_cmd_name = NECCommandName(nec_command)
 
-        if nec_address == 1 and nec_command != 0:
-
+        if nec_command != 0:
+            nec_cmd_name = NECCommandName(nec_address,nec_command)
             # INFO (20) - toggle mode
             if nec_cmd_name == "Info":
                 if show_mode == 0:
@@ -170,9 +170,9 @@ def Dice():
     while True:
         # Read IR
         nec_address, nec_command = codey.ir.receive_remote_code()
-        nec_cmd_name = NECCommandName(nec_command)
-
-        if nec_address == 1 and nec_command != 0:
+        
+        if nec_command != 0:
+            nec_cmd_name = NECCommandName(nec_address,nec_command)
             # EXIT (86)
             if nec_cmd_name == "Exit":
                 codey.led.off()
@@ -207,9 +207,9 @@ def IRDrive():
             codey.display.show_image(sun_glasses, 0, 0)
 
         nec_address, nec_command = codey.ir.receive_remote_code()
-        nec_cmd_name = NECCommandName(nec_command)
 
-        if nec_address == 1 and nec_command != 0:
+        if nec_command != 0:
+            nec_cmd_name = NECCommandName(nec_address,nec_command)
 
             # Power
             if nec_cmd_name == "Power":
@@ -342,9 +342,9 @@ def MainMenu():
 
     while True:
         nec_address, nec_command = codey.ir.receive_remote_code()
-        nec_cmd_name = NECCommandName(nec_command)
 
-        if nec_address == 1 and nec_command != 0:
+        if nec_command != 0:
+            nec_cmd_name = NECCommandName(nec_address,nec_command)
 
             # UP (80)
             if nec_cmd_name == "Up":

@@ -19,8 +19,11 @@ Functions assigned to buttons:
 
 ### Infrared Remote controled Menu
 Offer functionalities controled by Infrared remote. I use this [Emos](EmosIr.md)
+
 You will need to find your Address and Commands, and update code accordingly to use your remote.
+[Howto Set IR Remote Control](HowtoSetIRRC.md)
 I use the Arrows, OK, Exit for basic navigation.
+
 Main Menu:
 - IRDrive
 - Batter

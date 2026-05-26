@@ -46,4 +46,6 @@
 |Recall|1|27|
 |TV/Radio|1|81|
 
+![EmosIRRC](EmosIRRC.jpg)
+
 [Main Page](README.md)

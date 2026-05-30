@@ -1,0 +1,20 @@
+ > meminfo
+Total MDM Shared Memory Region : 2432KB
+Shared Memory Usable           : 002320KB
+Shared Memory in-use           : 000163KB
+Shared Memory free             : 002156KB
+Shared Memory allocs           : 038811
+Shared Memory frees            : 036237
+Shared Memory alloc/free delta : 002574
+
+Heap bytes in-use     : 000016
+Heap allocs           : 000076
+Heap frees            : 000075
+Heap alloc/free delta : 000001
+
+
+ > sysstate mem
+MemTotal: 58800 kB (60211200 bytes)
+MemTotalFree: 3200 kB (3276800 bytes)
+
+

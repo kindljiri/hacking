@@ -3,6 +3,8 @@ import event
 import rocky
 import time
 import random
+import sys
+#import machine
 #import codey_broadcast
 
 # #Codey Rocky G33kOS
@@ -339,6 +341,7 @@ def MainMenu():
     # show first item
     codey.display.show(menu[menu_index])
     codey.broadcast("Menu")
+    print("Menu")
 
     while True:
         nec_address, nec_command = codey.ir.receive_remote_code()
@@ -372,6 +375,13 @@ def MainMenu():
             codey.display.show(menu[menu_index])
             last_index = menu_index
 
+def SerialMode():
+
+    print("Welcome to G33k OS")
+    print("Ask for 'help' when you need ;-)")
+        
+    #Serial mode is not working over USB
+    
 @event.start
 def start_cb():
     simple_eyes="00003c7e7e3c000000003c7e7e3c0000"
@@ -388,6 +398,8 @@ def start_cb():
 def button_b_cb():
     codey.stop_other_scripts()
     codey.led.off()
+    print("NEC Ir Decoder")
+    print("Display recieved Infrared NEC Commands in format Address:Command")
     codey.display.show("NEC Ir Decoder")
     codey.broadcast("NEC Ir Decoder")
     last = None
@@ -398,6 +410,7 @@ def button_b_cb():
         if nec_command != 0 and nec_command != last:
             text = "{}:{}".format(nec_address, nec_command)
             codey.display.show(text)
+            print(text)
             last = nec_command
 
         time.sleep(0.05)
@@ -407,3 +420,9 @@ def button_a_cb():
     codey.stop_other_scripts()
     MainMenu()
         
+@event.button_c_pressed
+def button_c_cb():
+    codey.stop_other_scripts()
+    simple_eyes="00003c7e7e3c000000003c7e7e3c0000"
+    codey.display.show_image(simple_eyes,0,0)
+    SerialMode()

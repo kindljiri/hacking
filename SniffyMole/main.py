@@ -72,6 +72,11 @@ def write_raw(msg):
 echo_enabled = True
 buffer = []
 bridge_mode = False
+history = []
+history_index = 0
+
+history = []
+history_index = 0
 
 def read_line():
     global echo_enabled, buffer
@@ -91,6 +96,21 @@ def read_line():
 
     if not ch:
         return None
+
+    # --- Arrow keys / escape sequences ---
+    if ch == "\x1b":  # ESC
+        # swallow next 2 bytes: '[' and the final code (A/B/C/D)
+        if USE_USB:
+            for _ in range(2):
+                r, _, _ = select.select([sys.stdin], [], [], 0)
+                if r:
+                    sys.stdin.read(1)
+        else:
+            for _ in range(2):
+                if uart.any():
+                    uart.read(1)
+        return None
+    # -------------------------------------
 
     # --- Backspace handling ---
     if ch in ("\x08", "\x7f"):  # backspace or delete
@@ -119,6 +139,8 @@ def read_line():
     # --- Normal character ---
     buffer.append(ch)
     return None
+
+
 
 # ---------------------------------------------------------------------------
 # WiFi helpers
@@ -517,16 +539,17 @@ def cmd_scan_hosts(args):
         return "ERR SCAN_HOSTS_" + str(e)
     
 def cmd_scan_ports(args):
-    # Minimum: scan ports <ip>
-    if len(args) < 2:
-        return "ERR USAGE scan ports <ip> [profile] [portlist]"
+    # args = [ip] or [ip, profile] or [ip, custom, portlist]
 
-    target_ip = args[1]
+    if len(args) < 1:
+        return "ERR USAGE scan_ports <ip> [profile] [portlist]"
+
+    target_ip = args[0]
 
     # Default profile = common
     mode = "common"
-    if len(args) >= 3:
-        mode = args[2]
+    if len(args) >= 2:
+        mode = args[1]
 
     # -------------------------
     # Port profiles
@@ -541,10 +564,10 @@ def cmd_scan_ports(args):
         ports = list(range(1, 65536))
 
     elif mode == "custom":
-        if len(args) != 4:
-            return "ERR USAGE scan ports <ip> custom <p1,p2,p3>"
+        if len(args) != 3:
+            return "ERR USAGE scan_ports <ip> custom <p1,p2,p3>"
         try:
-            ports = [int(p) for p in args[3].split(",")]
+            ports = [int(p) for p in args[2].split(",")]
         except:
             return "ERR INVALID_PORTLIST"
 
@@ -565,6 +588,7 @@ def cmd_scan_ports(args):
 
     except Exception as e:
         return "ERR SCAN_PORTS_" + str(e)
+
     
 def cmd_scan_subnet(args):
     if not refresh_wifi_info():
@@ -693,12 +717,13 @@ COMMANDS = {
 # Main loop
 # ---------------------------------------------------------------------------
 
-write_line("SniffyMole v2.0")
 
 MOTD = [
     "",
+    "   SniffyMole v2.0",
     "   SniffyMole — USB/UART Pentest Helper",
     "   Stay curious. Dig deeper.",
+    ""
 ]
 
 for line in MOTD:

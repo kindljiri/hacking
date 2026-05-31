@@ -59,7 +59,7 @@ def host_range(network_ip, broadcast_ip):
 # Host probing
 # ------------------------------------------------------------
 
-def ping_host(ip, timeout_ms=100):
+def ping_host(ip, timeout_ms=200):
     timeout_s = timeout_ms / 1000
 
     test_ports = [22, 80, 443, 8080, 139, 445, 3389]
@@ -88,7 +88,7 @@ def ping_host(ip, timeout_ms=100):
 # Port scanning
 # ------------------------------------------------------------
 
-def scan_ports(ip, ports, timeout_ms=100):
+def scan_ports(ip, ports, timeout_ms=250):
     """
     Scan a list of ports on a host.
     Returns list of open ports.

@@ -11,11 +11,18 @@ import time
 # ------------------------------------------------------------
 
 def ip_to_int(ip):
-    return struct.unpack("!I", socket.inet_aton(ip))[0]
+    # Convert "A.B.C.D" → integer
+    parts = ip.split(".")
+    return (int(parts[0]) << 24) | (int(parts[1]) << 16) | (int(parts[2]) << 8) | int(parts[3])
 
 def int_to_ip(i):
-    return socket.inet_ntoa(struct.pack("!I", i))
-
+    # Convert integer → "A.B.C.D"
+    return "{}.{}.{}.{}".format(
+        (i >> 24) & 0xFF,
+        (i >> 16) & 0xFF,
+        (i >> 8) & 0xFF,
+        i & 0xFF
+    )
 
 def calc_network(ip, mask):
     """
@@ -53,28 +60,29 @@ def host_range(network_ip, broadcast_ip):
 # ------------------------------------------------------------
 
 def ping_host(ip, timeout_ms=100):
-    """
-    Multi-port host liveness detection.
-    Returns True if ANY tested port responds with:
-    - 0   (open)
-    - 111 (connection refused, host alive)
-    """
+    timeout_s = timeout_ms / 1000
+
     test_ports = [22, 80, 443, 8080, 139, 445, 3389]
 
     for p in test_ports:
         try:
             s = socket.socket()
-            s.settimeout(timeout_ms / 1000)
-            r = s.connect_ex((ip, p))
+            s.settimeout(timeout_s)
+            s.connect((ip, p))
             s.close()
+            return True  # port open
+        except OSError as e:
+            errno = e.args[0]
 
-            if r == 0 or r == 111:
+            # Host is alive but port is closed or filtered
+            if errno in (104, 111, 113, 110):
                 return True
 
         except:
             pass
 
     return False
+
 
 # ------------------------------------------------------------
 # Port scanning
@@ -86,20 +94,23 @@ def scan_ports(ip, ports, timeout_ms=100):
     Returns list of open ports.
     """
     open_ports = []
+    timeout_s = timeout_ms / 1000
 
     for p in ports:
         try:
             s = socket.socket()
-            s.settimeout(timeout_ms / 1000)
-            r = s.connect_ex((ip, p))
+            s.settimeout(timeout_s)
+            s.connect((ip, p))   # SUCCESS → port open
             s.close()
-            if r == 0:
-                open_ports.append(p)
+            open_ports.append(p)
+        except OSError as e:
+            # Closed ports raise OSError with errno 104/111/etc.
+            # We IGNORE these because we only care about open ports.
+            pass
         except:
             pass
 
     return open_ports
-
 
 # ------------------------------------------------------------
 # Network discovery
@@ -127,7 +138,7 @@ def scan_subnet(ip, mask, ports):
     Returns dict: {host: [open ports]}
     """
     results = {}
-    hosts = discover_hosts(ip, mask)
+    hosts = scan_hosts(ip, mask)
 
     for h in hosts:
         results[h] = scan_ports(h, ports)

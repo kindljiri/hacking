@@ -501,6 +501,9 @@ def cmd_scan_hosts(args):
     if not refresh_wifi_info():
         return "ERR NO_WIFI"
 
+    # Status line
+    write_line("INFO SCANNING_HOSTS IP={} MASK={}".format(last_ip, last_mask))
+
     try:
         import netscan
         hosts = netscan.scan_hosts(last_ip, last_mask)
@@ -739,7 +742,7 @@ while True:
         except Exception as e:
             write_line("ERR " + repr(e))
     else:
-        write_line("ERR UNKNOWN_CMD")
+        write_line("ERR UNKNOWN_CMD: " + cmd)
 
     # Always show prompt after processing a command
     show_prompt()

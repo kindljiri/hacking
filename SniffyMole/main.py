@@ -6,6 +6,8 @@ import select
 import machine
 import network
 import ubinascii
+import smble
+import common
 
 try:
     import bluetooth
@@ -35,35 +37,7 @@ def init_uart(baud=None):
 if not USE_USB:
     init_uart()
 
-def read_line_usb():
-    r, _, _ = select.select([sys.stdin], [], [], 0)
-    if r:
-        return sys.stdin.readline()
-    return None
 
-def write_line_usb(msg):
-    sys.stdout.write(msg + "\n")
-
-def read_line_uart():
-    if uart and uart.any():
-        return uart.readline()
-    return None
-
-def write_line_uart(msg):
-    if uart:
-        uart.write(msg + "\n")
-
-def write_line(msg):
-    if USE_USB:
-        write_line_usb(msg)
-    else:
-        write_line_uart(msg)
-
-def write_raw(msg):
-    if USE_USB:
-        sys.stdout.write(msg)
-    else:
-        uart.write(msg)
 
 # ---------------------------------------------------------------------------
 # Global state: echo, input buffer, bridge mode
@@ -150,6 +124,7 @@ wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 
 def wifi_scan():
+    wlan.active(True)
     aps = []
     for entry in wlan.scan():
         ssid, bssid, channel, rssi, authmode, hidden = entry
@@ -231,160 +206,17 @@ def refresh_wifi_info():
 
     return True
 
-
-# ---------------------------------------------------------------------------
-# BLE helpers (HEX + partial decode)
-# ---------------------------------------------------------------------------
-
-ble = None
-ble_scan_results = []
-
-def ble_init():
-    global ble
-    if not HAVE_BLE:
-        return
-    if ble is None:
-        ble = bluetooth.BLE()
-        ble.active(True)
-
-def _decode_name(adv):
-    i = 0
-    while i + 1 < len(adv):
-        length = adv[i]
-        if length == 0:
-            break
-        if i + 1 + length > len(adv):
-            break
-        ad_type = adv[i + 1]
-        if ad_type in (0x08, 0x09):
-            return adv[i + 2:i + 1 + length].decode(errors="ignore")
-        i += 1 + length
-    return ""
-
-def _decode_uuids(adv):
-    uuids = []
-    i = 0
-    while i + 1 < len(adv):
-        length = adv[i]
-        if length == 0:
-            break
-        if i + 1 + length > len(adv):
-            break
-        ad_type = adv[i + 1]
-        data = adv[i + 2:i + 1 + length]
-        if ad_type in (0x02, 0x03):  # 16-bit UUIDs
-            for j in range(0, len(data), 2):
-                if j + 2 <= len(data):
-                    u = data[j:j+2]
-                    uuids.append("0x%04X" % int.from_bytes(u, "little"))
-        elif ad_type in (0x06, 0x07):  # 128-bit UUIDs
-            for j in range(0, len(data), 16):
-                if j + 16 <= len(data):
-                    u = data[j:j+16]
-                    uuids.append(ubinascii.hexlify(u).decode())
-        i += 1 + length
-    return uuids
-
-def _decode_flags(adv):
-    i = 0
-    while i + 1 < len(adv):
-        length = adv[i]
-        if length == 0:
-            break
-        if i + 1 + length > len(adv):
-            break
-        ad_type = adv[i + 1]
-        if ad_type == 0x01 and length >= 2:
-            return "0x%02X" % adv[i + 2]
-        i += 1 + length
-    return ""
-
-def _decode_txpower(adv):
-    i = 0
-    while i + 1 < len(adv):
-        length = adv[i]
-        if length == 0:
-            break
-        if i + 1 + length > len(adv):
-            break
-        ad_type = adv[i + 1]
-        if ad_type == 0x0A and length >= 2:
-            val = adv[i + 2]
-            if val & 0x80:
-                val = val - 256
-            return str(val)
-        i += 1 + length
-    return ""
-
-def ble_irq(event, data):
-    global ble_scan_results
-    if event == bluetooth._IRQ_SCAN_RESULT:
-        addr_type, addr, adv_type, rssi, adv_data = data
-        mac = ubinascii.hexlify(addr, ":").decode()
-        adv = bytes(adv_data)
-        name = _decode_name(adv)
-        uuids = _decode_uuids(adv)
-        flags = _decode_flags(adv)
-        txp = _decode_txpower(adv)
-        ble_scan_results.append({
-            "mac": mac,
-            "addr_type": addr_type,
-            "rssi": rssi,
-            "adv_hex": ubinascii.hexlify(adv).decode(),
-            "name": name,
-            "uuids": ",".join(uuids),
-            "flags": flags,
-            "txpower": txp,
-        })
-    elif event == bluetooth._IRQ_SCAN_DONE:
-        pass
-
-def ble_scan(duration_ms=5000):
-    global ble_scan_results
-    if not HAVE_BLE:
-        return None
-    ble_init()
-    ble_scan_results = []
-    ble.irq(ble_irq)
-    ble.gap_scan(duration_ms, 30000, 30000)
-    t0 = time.ticks_ms()
-    while time.ticks_diff(time.ticks_ms(), t0) < duration_ms + 500:
-        time.sleep_ms(100)
-    ble.gap_scan(None)
-    return ble_scan_results
-
-def ble_info():
-    if not HAVE_BLE:
-        return None
-    ble_init()
-    info = {}
-    try:
-        mac = ble.config("mac")
-        info["mac"] = ubinascii.hexlify(mac, ":").decode()
-    except:
-        info["mac"] = ""
-    info["active"] = int(ble.active())
-    return info
-
-def ble_reset():
-    if not HAVE_BLE:
-        return False
-    ble.active(False)
-    time.sleep_ms(100)
-    ble.active(True)
-    return True
-
 # ---------------------------------------------------------------------------
 # USB<->UART line-based forwarding
 # ---------------------------------------------------------------------------
 
 def bridge_loop():
     global bridge_mode
-    write_line("OK FORWARDING")
+    common.write_line_usb("OK FORWARDING")
     while bridge_mode:
         # USB -> UART
         if USE_USB:
-            line = read_line_usb()
+            line = common.read_line_usb()
             if line is not None:
                 if isinstance(line, bytes):
                     line = line.decode(errors="ignore")
@@ -393,15 +225,15 @@ def bridge_loop():
                     uart.write(line + "\n")
         # UART -> USB
         if uart:
-            line = read_line_uart()
+            line = common.read_line_uart()
             if line is not None:
                 if isinstance(line, bytes):
                     line = line.decode(errors="ignore")
                 line = line.rstrip("\r\n")
                 if USE_USB:
-                    write_line_usb(line)
+                    common.write_line_usb(line)
         time.sleep_ms(5)
-    write_line("OK STOPPED")
+    common.write_line_usb("OK STOPPED")
 
 # ---------------------------------------------------------------------------
 # Command handlers
@@ -414,11 +246,54 @@ def cmd_echo(args):
     return " ".join(args)
 
 def cmd_info(args):
-    import gc
+    import gc, time, network, os
+
+    # Uptime
     uptime = time.ticks_ms() // 1000
+
+    # Memory
     gc.collect()
     free = gc.mem_free()
-    return "UPTIME={}s FREE={} FW=main.py".format(uptime, free)
+
+    # Wi-Fi
+    wlan = network.WLAN(network.STA_IF)
+    wifi_active = wlan.active()
+    wifi_connected = wlan.isconnected() if wifi_active else False
+    ip = None
+    mac = None
+
+    if wifi_active:
+        mac = wlan.config('mac')
+        if wifi_connected:
+            ip = wlan.ifconfig()[0]
+
+    # Flash size
+    stat = os.statvfs('/')
+    flash_total = stat[0] * stat[2]
+    flash_free = stat[0] * stat[3]
+
+    return (
+        "UPTIME={}s "
+        "FREE={} "
+        "BLE={} "
+        "WIFI_ACTIVE={} "
+        "WIFI_CONN={} "
+        "IP={} "
+        "MAC={} "
+        "FLASH_TOTAL={} "
+        "FLASH_FREE={} "
+        "FW=main.py"
+    ).format(
+        uptime,
+        free,
+        int(HAVE_BLE),
+        int(wifi_active),
+        int(wifi_connected),
+        ip,
+        mac,
+        flash_total,
+        flash_free
+    )
 
 def cmd_help(args):
     cmds = sorted(COMMANDS.keys())
@@ -428,15 +303,15 @@ def cmd_help(args):
 
 def cmd_wifi_scan(args):
     aps = wifi_scan()
-    write_line("OK WIFI_SCAN")
+    #common.write_line_usb("OK WIFI_SCAN")
     for ap in aps:
         line = "SSID={ssid} BSSID={bssid} RSSI={rssi} CH={ch} AUTH={auth} HIDDEN={hidden}".format(**ap)
-        write_line(line)
+        common.write_line_usb(line)
     return "END"
 
 def cmd_wifi_connect(args):
     if len(args) != 2:
-        return "ERR ARGS"
+        return "ERR ARGS: wifi_connect ssid password"
     ssid = args[0]
     password = args[1]
     ok = wifi_connect(ssid, password)
@@ -465,26 +340,26 @@ def cmd_wifi_disconnect(args):
 def cmd_ble_scan(args):
     if not HAVE_BLE:
         return "ERR NO_BLE"
-    res = ble_scan()
-    write_line("OK BLE_SCAN")
+    res = smble.ble_scan()
+    common.write_line_usb("OK BLE_SCAN")
     for dev in res:
         line = (
             "MAC={mac} TYPE={addr_type} RSSI={rssi} NAME={name} "
             "UUIDS={uuids} FLAGS={flags} TXP={txpower} ADV_HEX={adv_hex}"
         ).format(**dev)
-        write_line(line)
+        common.write_line_usb(line)
     return "END"
 
 def cmd_ble_info(args):
     if not HAVE_BLE:
         return "ERR NO_BLE"
-    info = ble_info()
+    info = smble.ble_info()
     return "ACTIVE={} MAC={}".format(info["active"], info["mac"])
 
 def cmd_ble_reset(args):
     if not HAVE_BLE:
         return "ERR NO_BLE"
-    ok = ble_reset()
+    ok = smble.ble_reset()
     return "BLE_RESET" if ok else "ERR BLE_RESET"
 
 #UART Handlers
@@ -523,20 +398,23 @@ def cmd_scan_hosts(args):
     if not refresh_wifi_info():
         return "ERR NO_WIFI"
 
-    # Status line
-    write_line("INFO SCANNING_HOSTS IP={} MASK={}".format(last_ip, last_mask))
+    # Informational header for the user
+    common.write_line_usb("INFO SCANNING_HOSTS IP={} MASK={}".format(last_ip, last_mask))
 
     try:
         import netscan
-        hosts = netscan.scan_hosts(last_ip, last_mask)
+
+        # Enable progress output
+        hosts = netscan.scan_hosts(last_ip, last_mask, verbose=True)
 
         if not hosts:
-            return "OK SCAN_HOSTS NONE"
+            common.write_line_usb("INFO NO_HOSTS_FOUND")
 
-        return "OK SCAN_HOSTS " + " ".join(hosts)
+        return "END"
 
     except Exception as e:
         return "ERR SCAN_HOSTS_" + str(e)
+
     
 def cmd_scan_ports(args):
     # args = [ip] or [ip, profile] or [ip, custom, portlist]
@@ -579,12 +457,12 @@ def cmd_scan_ports(args):
     # -------------------------
     try:
         import netscan
-        open_ports = netscan.scan_ports(target_ip, ports)
+        open_ports = netscan.scan_ports(target_ip, ports, verbose=True)
 
         if not open_ports:
             return "OK SCAN_PORTS NONE"
 
-        return "OK SCAN_PORTS " + ",".join(str(p) for p in open_ports)
+        return "END"
 
     except Exception as e:
         return "ERR SCAN_PORTS_" + str(e)
@@ -613,7 +491,7 @@ def cmd_scan_subnet(args):
 
     elif mode == "custom":
         if len(args) != 3:
-            return "ERR USAGE scan subnet custom <p1,p2,p3>"
+            return "ERR USAGE scan_subnet custom <p1,p2,p3>"
         try:
             ports = [int(p) for p in args[2].split(",")]
         except:
@@ -627,22 +505,12 @@ def cmd_scan_subnet(args):
     # -------------------------
     try:
         import netscan
-        results = netscan.scan_subnet(last_ip, last_mask, ports)
+        results = netscan.scan_subnet(last_ip, last_mask, ports, verbose=True)
 
         if not results:
             return "OK SCAN_SUBNET NONE"
 
-        # Format:
-        # HOST <ip> <comma-separated-open-ports>
-        lines = []
-        for host, open_ports in results.items():
-            if open_ports:
-                ports_str = ",".join(str(p) for p in open_ports)
-            else:
-                ports_str = "NONE"
-            lines.append(f"HOST {host} {ports_str}")
-
-        return "OK SCAN_SUBNET\n" + "\n".join(lines)
+        return "END"
 
     except Exception as e:
         return "ERR SCAN_SUBNET_" + str(e)
@@ -651,11 +519,11 @@ def cmd_scan_subnet(args):
 #Pseudo OS Handlers
 
 def cmd_exit(args):
-    write_line("OK EXIT")
+    common.write_line_usb("OK EXIT")
     raise SystemExit
 
 def cmd_reboot(args):
-    write_line("OK REBOOT")
+    common.write_line_usb("OK REBOOT")
     time.sleep_ms(100)
     machine.reset()
 
@@ -674,7 +542,7 @@ def cmd_echo_status(args):
 
 def show_prompt():
     if not bridge_mode and echo_enabled:
-        write_raw("> ")
+        common.write_raw_usb("> ")
 
 
 # ---------------------------------------------------------------------------
@@ -727,9 +595,9 @@ MOTD = [
 ]
 
 for line in MOTD:
-    write_line(line)
+    common.write_line_usb(line)
 
-write_line("READY")
+common.write_line_usb("READY")
 
 # Show prompt at startup
 show_prompt()
@@ -758,16 +626,14 @@ while True:
             if result == "":
                 show_prompt()
                 continue
-            if result.startswith("ERR "):
-                write_line(result)
             else:
-                write_line("OK " + result)
+                common.write_line_usb(result)
         except SystemExit:
             break
         except Exception as e:
-            write_line("ERR " + repr(e))
+            common.write_line_usb("ERR " + repr(e))
     else:
-        write_line("ERR UNKNOWN_CMD: " + cmd)
+       common.write_line_usb("ERR UNKNOWN_CMD: " + cmd)
 
     # Always show prompt after processing a command
     show_prompt()

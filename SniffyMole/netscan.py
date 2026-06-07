@@ -4,6 +4,7 @@
 import socket
 import struct
 import time
+import common
 
 
 # ------------------------------------------------------------
@@ -59,9 +60,12 @@ def host_range(network_ip, broadcast_ip):
 # Host probing
 # ------------------------------------------------------------
 
-def ping_host(ip, timeout_ms=200):
+def ping_host(ip, timeout_ms=200, verbose=False):
+    """
+    Multi-port liveness detection.
+    Returns True if host responds in any way.
+    """
     timeout_s = timeout_ms / 1000
-
     test_ports = [22, 80, 443, 8080, 139, 445, 3389]
 
     for p in test_ports:
@@ -70,12 +74,19 @@ def ping_host(ip, timeout_ms=200):
             s.settimeout(timeout_s)
             s.connect((ip, p))
             s.close()
-            return True  # port open
+
+            if verbose:
+                common.write_line_usb(f"{ip} alive (port {p} open)")
+
+            return True
+
         except OSError as e:
             errno = e.args[0]
 
-            # Host is alive but port is closed or filtered
+            # Host alive but port closed/filtered
             if errno in (104, 111, 113, 110):
+                if verbose:
+                    common.write_line_usb(f"{ip} alive (port {p} closed/filtered)")
                 return True
 
         except:
@@ -88,7 +99,7 @@ def ping_host(ip, timeout_ms=200):
 # Port scanning
 # ------------------------------------------------------------
 
-def scan_ports(ip, ports, timeout_ms=250):
+def scan_ports(ip, ports, timeout_ms=250, verbose=False):
     """
     Scan a list of ports on a host.
     Returns list of open ports.
@@ -100,23 +111,26 @@ def scan_ports(ip, ports, timeout_ms=250):
         try:
             s = socket.socket()
             s.settimeout(timeout_s)
-            s.connect((ip, p))   # SUCCESS → port open
+            s.connect((ip, p))
             s.close()
+
+            if verbose:
+                common.write_line_usb(f"{ip}:{p} OPEN")
+
             open_ports.append(p)
-        except OSError as e:
-            # Closed ports raise OSError with errno 104/111/etc.
-            # We IGNORE these because we only care about open ports.
-            pass
+
         except:
+            # Closed ports raise OSError; we ignore them
             pass
 
     return open_ports
+
 
 # ------------------------------------------------------------
 # Network discovery
 # ------------------------------------------------------------
 
-def scan_hosts(ip, mask):
+def scan_hosts(ip, mask, verbose=False):
     """
     Return list of alive hosts in the subnet.
     """
@@ -124,23 +138,43 @@ def scan_hosts(ip, mask):
     alive = []
 
     for host in host_range(net, brd):
-        if ping_host(host):
+        if ping_host(host, verbose=False):
+            if verbose:
+                common.write_line_usb(f"{host} UP")
             alive.append(host)
 
     return alive
 
 
-def scan_subnet(ip, mask, ports):
+def scan_subnet(ip, mask, ports, verbose=False):
     """
-    Full recon:
-    - find alive hosts
-    - scan ports on each
+    Full subnet reconnaissance:
+    - enumerate alive hosts
+    - scan ports on each alive host
     Returns dict: {host: [open ports]}
     """
+
+    # Discover hosts (respect verbose)
+    hosts = scan_hosts(ip, mask, verbose=False)
+
     results = {}
-    hosts = scan_hosts(ip, mask)
 
     for h in hosts:
-        results[h] = scan_ports(h, ports)
+
+        open_ports = scan_ports(h, ports, verbose=False)
+        results[h] = open_ports
+
+        if verbose:
+            if open_ports:
+                common.write_line_usb(
+                    "{}:{}".format(
+                        h, ",".join(str(p) for p in open_ports)
+                    )
+                )
+            else:
+                common.write_line_usb(
+                    "{}:NONE".format(h)
+                )
 
     return results
+

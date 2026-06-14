@@ -8,6 +8,7 @@ import network
 import ubinascii
 import smble
 import common
+import passiveSniffers
 
 try:
     import bluetooth
@@ -246,54 +247,82 @@ def cmd_echo(args):
     return " ".join(args)
 
 def cmd_info(args):
-    import gc, time, network, os
+    import gc, time, network, os, sys, machine
 
-    # Uptime
-    uptime = time.ticks_ms() // 1000
+    # --- Collect all data once ---
+    uptime_s = time.ticks_ms() // 1000
 
-    # Memory
     gc.collect()
-    free = gc.mem_free()
+    free_b = gc.mem_free()
 
-    # Wi-Fi
+    stat = os.statvfs('/')
+    flash_total_b = stat[0] * stat[2]
+    flash_free_b = stat[0] * stat[3]
+
+    try:
+        cpu_freq_hz = machine.freq()
+    except:
+        cpu_freq_hz = None
+
+    try:
+        uid_hex = machine.unique_id().hex()
+    except:
+        uid_hex = None
+
+    platform = sys.platform
+    mp_version = sys.version
+
     wlan = network.WLAN(network.STA_IF)
     wifi_active = wlan.active()
     wifi_connected = wlan.isconnected() if wifi_active else False
+
     ip = None
     mac = None
 
     if wifi_active:
-        mac = wlan.config('mac')
+        try:
+            mac = wlan.config('mac').hex()
+        except:
+            mac = None
+
         if wifi_connected:
             ip = wlan.ifconfig()[0]
 
-    # Flash size
-    stat = os.statvfs('/')
-    flash_total = stat[0] * stat[2]
-    flash_free = stat[0] * stat[3]
+    # --- Section builders ---
+    sections = {
+        "uptime": "UPTIME=[{}s]".format(uptime_s),
+        "cpu": "CPU=[{}Hz ID={}]".format(cpu_freq_hz, uid_hex),
+        "memory": "MEM=[FREE={}B]".format(free_b),
+        "flash": "FLASH=[TOTAL={}B FREE={}B]".format(flash_total_b, flash_free_b),
+        "sw": "SW=[PLATFORM={} MPY={}]".format(platform, mp_version),
+        "net": "NET=[BLE={} WIFI_ACTIVE={} WIFI_CONN={} IP={} MAC={}]".format(
+            int(HAVE_BLE),
+            int(wifi_active),
+            int(wifi_connected),
+            ip,
+            mac
+        )
+    }
 
-    return (
-        "UPTIME={}s "
-        "FREE={} "
-        "BLE={} "
-        "WIFI_ACTIVE={} "
-        "WIFI_CONN={} "
-        "IP={} "
-        "MAC={} "
-        "FLASH_TOTAL={} "
-        "FLASH_FREE={} "
-        "FW=main.py"
-    ).format(
-        uptime,
-        free,
-        int(HAVE_BLE),
-        int(wifi_active),
-        int(wifi_connected),
-        ip,
-        mac,
-        flash_total,
-        flash_free
-    )
+    # --- No args → full grouped output ---
+    if not args:
+        return " ".join([
+            sections["uptime"],
+            sections["cpu"],
+            sections["memory"],
+            sections["flash"],
+            sections["sw"],
+            sections["net"]
+        ])
+
+    # --- With args → return only requested section ---
+    key = args[0].lower()
+
+    if key in sections:
+        return sections[key]
+
+    return "ERR Unknown info section '{}'".format(key)
+
 
 def cmd_help(args):
     cmds = sorted(COMMANDS.keys())
@@ -516,6 +545,13 @@ def cmd_scan_subnet(args):
         return "ERR SCAN_SUBNET_" + str(e)
 
 
+#Passive Sniffer Handlers
+
+def cmd_sssd_listenner(args):
+    passiveSniffers.sssd_listener()
+    return "END"
+
+
 #Pseudo OS Handlers
 
 def cmd_exit(args):
@@ -572,6 +608,8 @@ COMMANDS = {
     "scan_hosts": cmd_scan_hosts,
     "scan_ports": cmd_scan_ports,
     "scan_subnet": cmd_scan_subnet,
+
+    "sniff_sssd": cmd_sssd_listenner,
 
     "echo_on": cmd_echo_on,
     "echo_off": cmd_echo_off,

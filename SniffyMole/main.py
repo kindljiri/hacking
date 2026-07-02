@@ -394,16 +394,32 @@ def cmd_ble_reset(args):
 #UART Handlers
 
 def cmd_uart_set(args):
+    global uart, uart_baud
+
     if len(args) != 1:
         return "ERR ARGS"
+
     try:
         baud = int(args[0])
     except:
         return "ERR BAD_BAUD"
+
     if baud < 1200 or baud > 921600:
         return "ERR BAD_BAUD"
-    init_uart(baud)
-    return "BAUD={}".format(baud)
+
+    # Proper ESP32 reset of UART driver
+    try:
+        if uart:
+            uart.deinit()
+    except:
+        pass
+
+    try:
+        uart = machine.UART(UART_ID, baudrate=baud)
+        uart_baud = baud
+        return "BAUD={}".format(baud)
+    except Exception as e:
+        return "ERR " + repr(e)
 
 def cmd_uart_get(args):
     return "BAUD={}".format(uart_baud)

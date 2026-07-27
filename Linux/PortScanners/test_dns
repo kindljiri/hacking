@@ -1,0 +1,69 @@
+#! /bin/sh
+
+# Simple script testing DNS resolution of devices given in file, 
+# one device per line. Script use host command to do the test.
+
+#Variables:
+
+Author='Jiri Kindl'
+Version='20210916'
+#Version history at the end of the file:
+
+source_host=$(hostname)
+source_ip=$(hostname -i)
+
+usage()
+{
+  cat << EOF
+  Usage: $0 -h hostfile 
+
+  -h hostfile  file with the list of host/ip/fqdn to test (one per line)
+EOF
+}
+
+HFILE=
+
+while getopts "h:" OPTION
+do
+  case $OPTION in
+  h)
+    HFILE=$OPTARG
+    ;;
+  esac
+done
+
+if [ -z $HFILE ] 
+then
+  usage
+  exit 1
+fi
+
+echo "Source host,Source IP,Query,DNS Result"
+#Using sed to remove windows eol and trim the Text (remove leading and trailing spaces)
+for test_host in $(sed -e 's/\r//' $HFILE | sed 's/^[ \t]*//' |sed 's/[ \t]*$//')
+do
+  echo -n "$source_host,$source_ip,$test_host,"
+  dns_raw_res=$(host $test_host)
+  result='Unknown'
+  if [ -n "$(echo $dns_raw_res | grep 'NXDOMAIN')" ]
+  then
+    result='Not found'
+  fi
+  if [ -n "$(echo $dns_raw_res | grep 'SERVFAIL')" ]
+  then
+    result='Not found'
+  fi
+  if [ -n "$(echo $dns_raw_res | grep 'has address')" ]
+  then
+    result=$(echo $dns_raw_res | grep 'has address'| rev | cut -d' ' -f1 | rev)
+  fi
+  if [ -n "$(echo $dns_raw_res | grep 'pointer')" ]
+  then
+    result=$(echo $dns_raw_res | grep 'pointer'| cut -d' ' -f5)
+  fi
+  echo $result
+done
+
+#VERSION HISTORY:
+#Version,Comment
+#20210917,Correct CSV Header

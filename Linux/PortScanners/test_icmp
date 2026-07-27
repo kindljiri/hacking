@@ -1,0 +1,192 @@
+#! /bin/sh
+
+# Simple script testing ICMP connectivity to devices given in file, 
+# one device per line. Script use ping command to do the test.
+#Variables:
+Author='Jiri Kindl'
+Version='20220815'
+#Version history at the end of the file:
+
+
+#DYNAMIC VARIABLES
+source_host=$(hostname)
+source_ip=$(hostname -i)
+
+usage()
+{
+  cat << EOF
+  Usage: $0 -h hostfile| -c CIDR [-t]
+
+  -h hostfile  file with the list of host to test (one per line)
+  -n CIDR      network address in CIDR format (like 10.0.0.0/24)
+  -t           enables troubleshooting, do the traceroute and get the 
+               last visible hop in output
+               
+EOF
+}
+
+checkAndLoadLibIP() {
+  LIBPATH="$(readlink -f "$0" | rev | cut -d'/' -f3- | rev)/libs"
+  if [ -e "$LIBPATH/libip" ]
+  then
+    . "$LIBPATH/libip"
+  else
+    echo "ERROR: CIDR functionality requires libip library. Still you can use hostfile. For help run $0 -?"
+    echo "ERROR: Not able to load $LIBPATH/libip, downlaod from same souce as you got this script."
+    exit 3
+  fi
+}
+
+validateHostfile ()
+{
+  if [ -z $HFILE ] 
+  then
+    echo "ERROR: no hostfile set"
+    usage
+    exit 10
+  fi
+  if [ ! -e $HFILE ]
+  then
+    echo "ERROR: file $HFILE does not exist"
+    usage
+    exit 11
+  fi
+  if [ ! -f $HFILE ]
+  then
+    echo "ERROR: file $HFILE is not regular file"
+    usage
+    exit 12
+  fi
+  if [ ! -r $HFILE ]
+  then
+    echo "ERROR: you have no read permisson for file $HFILE"
+    usage
+    exit 13
+  fi
+  if [ ! -s $HFILE ]
+  then
+    echo "ERROR: the file $HFILE is empty"
+    usage
+    exit 14
+  fi
+}
+
+validateCIDR()
+{
+  if [ -z $CIDR ] 
+  then
+    echo "ERROR: no CIDR set"
+    usage
+    exit 20
+  fi
+  if ! $(isValidCIDR $CIDR)
+  then
+    echo "ERROR: $CIDR is not valid CIDR"
+    usage
+    exit 21
+  fi 
+}
+
+getLastHop()
+{
+  traceroute -I $1 2> /dev/null | grep -v -E "\*.*\*.*\*" | tail -1 | sed -e 's/[ \t]\+/ /g' | sed -e 's/^ //' | cut -d' ' -f2,3 
+}
+
+#test ICMP connectivity with ping
+testICMP()
+{
+  local retval
+  ping -c 4 -q $1 2> /dev/null 1> /dev/null
+  retval=$?
+  #retval=$(ping -c 4 -q $1 | grep " 100% packet loss" | wc -l)
+  #echo $retval
+  return $retval
+}
+
+HFILE=
+CIDR=
+TROUBLESHOOTING=1
+#ARGUMENT PROCESSING
+if [ $# -eq 0 ]
+then
+  usage
+  exit 1
+else
+  while [ "$1" != "" ]; do
+    case $1 in
+        -h | --hostfile)        method="hostfile"
+                                shift
+                                HFILE=$1
+                                validateHostfile
+                                ;;
+        -n | --cidr)            method='cidr'
+                                shift
+                                CIDR=$1
+                                checkAndLoadLibIP
+                                validateCIDR
+                                ;;
+        -t )                    TROUBLESHOOTING=0
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift $(( $# > 0 ? 1 : 0 ))
+  done
+fi
+
+########################################################################
+#
+# MAIN 
+#
+########################################################################
+
+#Using sed to remove windows eol and trim the Text (remove leading and trailing spaces)
+#Using strings to remove any possible non-printable characters
+echo "Source Host,Source IP,Destination,Ping Result,Last Hop"
+
+if [ $method = "hostfile" ]
+then
+  for host in $(sed -e 's/\r//' $HFILE | sed 's/^[ \t]*//' |sed 's/[ \t]*$//'|strings)
+  do
+    if $(testICMP $host)
+    then
+      echo "$source_host,$source_ip,$host,ICMP OK"
+    else
+      if [ "$TROUBLESHOOTING" = "0" ]
+      then
+        lastHop=$(getLastHop $host)
+        echo "$source_host,$source_ip,$host,ICMP Failed,$lastHop"
+      else
+        echo "$source_host,$source_ip,$host,ICMP Failed"
+      fi
+    fi
+  done
+  exit 0;
+fi
+
+if [ $method = "cidr" ]
+then
+  for host in $(generateAllHosts $CIDR)
+  do
+    if $(testICMP $host)
+    then
+      echo "$source_host,$source_ip,$host,ICMP OK"
+    else
+      if [ "$TROUBLESHOOTING" = "0" ]
+      then
+        lastHop=$(getLastHop $host)
+        echo "$source_host,$source_ip,$host,ICMP Failed,$lastHop"
+      else
+        echo "$source_host,$source_ip,$host,ICMP Failed"
+      fi
+    fi
+  done
+  exit 0;
+fi
+
+#VERSION HISTORY:
+#Version,Comment
+#20210909,CHANGED new argument processing
+#20210910,ADDED better argument verification, function: validateHostfile
+#20210920,ADDED CIDR support, so can ping whole network
+#20220815,CHANGED changed -c parameter to -n to use same notation as test_tcp

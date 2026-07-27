@@ -1,0 +1,17 @@
+#! /bin/sh
+
+target=$1
+port=$2
+
+hops=`traceroute -I $1 | sed -e 's/^ //' | grep -E "^[0-9]" | wc -l`
+#hops=`tracert $1 | sed -e 's/^ //' | grep -E "^[0-9]" | wc -l`
+
+echo $hops
+for I in `seq $hops`
+do
+  #echo $I
+  traceroute -m $I -N 1 -q 1 -p $port $target | sed -e 's/^ //' | grep -E "^$I"
+  port=`expr $port - 1`
+  #echo $port
+done
+#traceroute -m $hops -p $port $target

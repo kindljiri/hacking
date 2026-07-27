@@ -1,0 +1,97 @@
+#! /bin/sh
+
+#Variables:
+
+Author='Jiri Kindl'
+Version='20221006'
+
+BFILE=
+HFILE=
+mode='none'
+COMM='public'
+OID='sysName'
+
+source_host=$(hostname)
+source_ip=$(hostname -i)
+
+usage()
+{
+  cat << EOF
+  Usage: $0 -h hostfile|-f file [-c community] [-o OID]
+
+  -f file               csv file with host,community,oid
+  -h hostfile           file with the list of host to test (one per line)
+  -c community
+  -o oid                by default it's sysName
+EOF
+}
+
+batchtest()
+{
+  #Using sed to remove windows eol and trim the Text (remove leading and trailing spaces)
+  #Using tr -cd '\040-\176,\012' to remove any possible non-printable characters
+  for line in $(sed -e 's/\r//' $BFILE | sed 's/^[ \t]*//' |sed 's/[ \t]*$//' | tr -cd '\040-\176,\012')
+  do
+    host=$(echo $line | cut -d , -f 1)
+    COMM=$(echo $line | cut -d , -f 2)
+    OID=$(echo $line | cut -d , -f 3)
+    echo -n $host,
+    snmpget -v 2c -c $COMM $host $OID.0 2>&1
+  done
+}
+
+hosttest()
+{
+  #Using sed to remove windows eol and trim the Text (remove leading and trailing spaces)
+  #Using tr -cd '\040-\176,\012' to remove any possible non-printable characters
+  for host in $(sed -e 's/\r//' $HFILE | sed 's/^[ \t]*//' |sed 's/[ \t]*$//'|tr -cd '\040-\176,\012')
+  do
+    echo -n $host,
+    snmpget -v 2c -c $COMM $host $OID.0 2>&1
+    #echo -n $host,
+    #snmpget -v 1 -c $COMM $host $OID.0
+  done
+}
+
+#main
+
+
+while getopts "f:h:c:o:" OPTION
+do
+  case $OPTION in
+  f)
+    BFILE=$OPTARG
+    mode='batchtest'
+    ;;
+  h)
+    HFILE=$OPTARG
+    mode='hosttest'
+    ;;
+  c)
+    COMM=$OPTARG
+    ;;
+  o)
+    OID=$OPTARG
+    ;;
+  esac
+done
+
+if [ -z $HFILE ]
+then
+  if [ -z $BFILE ]
+  then
+    usage
+    exit 1
+  fi
+fi
+
+if [ $mode == 'hosttest' ]
+then
+  hosttest
+fi
+
+if [ $mode == 'batchtest' ]
+then
+  batchtest
+fi 
+exit 0

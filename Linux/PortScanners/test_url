@@ -1,0 +1,76 @@
+#! /bin/bash
+
+# Simple script testing urls
+# 
+# Author: Jiri Kindl
+# Version: 20220418
+# Version history at end of the file
+
+usage()
+{
+  cat << EOF
+  Usage: $0 -l listfile
+
+  -l file
+           file with the list of urls to test (one per line)
+
+EOF
+}
+
+hosttest()
+{
+  #Using sed to remove windows eol and trim the Text (remove leading and trailing spaces)
+  for TEST_URL in $(sed -e 's/\r//' $URLFILE | sed 's/^[ \t]*//' |sed 's/[ \t]*$//')
+  do
+    HTTP_CODE=$(curl -k -w '%{http_code}' $TEST_URL -o /dev/null 2> /dev/null)
+    RETVAL=$?
+	  echo "$TEST_URL,$RETVAL,$HTTP_CODE"
+  done
+}
+#main
+
+URLFILE=
+
+while getopts "l:" OPTION
+do
+  case $OPTION in
+  l)
+    URLFILE=$OPTARG
+    ;;
+  esac
+done
+
+#check hostname file existence
+if [ -z $URLFILE ]
+then
+  echo "ERROR: no url list file entered"
+  usage
+  exit 1
+fi
+if [ ! -e $URLFILE ]
+then
+  echo "ERROR: $URLFILE not exist"
+  usage
+  exit 1
+fi
+
+
+
+echo "URL,Return Value,Http code"
+hosttest
+exit 0
+
+# Connectivity testing with curl
+#+-------------------------+------------+-----------+--------------------+
+#| URL                     | RETURN VAL | HTTP CODE | COMMENT            |
+#+-------------------------+------------+-----------+--------------------+ 
+#| https://10.0.0.101:8089 | 0          | 200       | OK                 |
+#| https://10.0.0.101:8099 | 7          | 000       | WRONG IP           |
+#| https://10.0.0.101:9997 | 35         | 000       | NON HTTP(S) PORT   |
+#| http://10.0.0.101:9997  | 52         | 000       | NON LISTENING PORT |
+#| http://10.0.0.10:8089   | 7          | 000       | NOT EXISTING NAME  |
+#+-------------------------+------------+-----------+--------------------+
+
+#Version,comment
+#20220418,INIT: Initial version
+

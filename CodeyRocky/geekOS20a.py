@@ -4,15 +4,13 @@ import rocky
 import time
 import random
 import sys
-#import machine
-#import codey_broadcast
 
-# #Codey Rocky G33kOS
-# The system after start is controled by EMOS Ir Remote control 
-# Have 3 modes based on 3 buttons 
-# - A - Main Menu controlled by EMOS Ir Remote
-# - B - NEC Ir Decoder
-# - C 
+# #Codey Rocky G33kOS 2.0
+# The system after start is controled by Potentiometr (Volume wheel) and A B C buttones.
+# Potentiometer scroll through menu
+# A - Accept
+# B - Back (Up from submenu)
+# C - Cancel (Back to MainMenu)
 #
 # ##EMOS Ir codes 
 # EMOS is NEC coded remote below is mapping of codes(DEC) to buttons on remote
@@ -132,27 +130,16 @@ def Battery():
     show_mode = 0
     last_mode = -1   # force initial draw
 
+    print("Battery")
+    print("Percentage: " + str(p) + "%")
+    print("Voltage: " + v + "V")
+
     while True:
-        # Read IR
-        nec_address, nec_command = codey.ir.receive_remote_code()
+        pot_value = codey.potentiometer.get_value()
+        show_mode = pot_value // 10
+        if show_mode > 2:
+            show_mode = 2
 
-        if nec_command != 0:
-            nec_cmd_name = NECCommandName(nec_address,nec_command)
-            # INFO (20) - toggle mode
-            if nec_cmd_name == "Info":
-                if show_mode == 0:
-                    show_mode = 1
-                elif show_mode == 1:
-                    show_mode = 2
-                else:
-                    show_mode = 0
-
-            # EXIT (86)
-            elif nec_cmd_name == "Exit":
-                codey.led.off()
-                codey.display.show("Menu:") #Because return to MainMenu will not redraw display
-                return
-            
         # Draw only when mode changes
         if show_mode != last_mode:
             if show_mode == 0:
@@ -165,30 +152,49 @@ def Battery():
 
         time.sleep(0.03)
 
-def Dice():
-    codey.display.show("Shake")
-    shaken = False
-    
+def DiceMenu():
+    global menu_pos
+    print("Dice")
+    codey.broadcast("Dice")
+    codey.display.show("Dice") 
+    menu_pos = "MainMenu.DiceMenu"
+    dice_menu = ["6d", "10d", "20d", "100d", "2x6d"]
+    pot_value = codey.potentiometer.get_value()
+    menu_index = pot_value // 10
+    if menu_index >= len(dice_menu):
+        menu_index = len(dice_menu) - 1
+
+    menu_pos = "MainMenu.DiceMenu." + dice_menu[menu_index]
+    last_index = menu_index
+
     while True:
-        # Read IR
-        nec_address, nec_command = codey.ir.receive_remote_code()
-        
-        if nec_command != 0:
-            nec_cmd_name = NECCommandName(nec_address,nec_command)
-            # EXIT (86)
-            if nec_cmd_name == "Exit":
-                codey.led.off()
-                codey.display.show("Menu:") #Because return to MainMenu will not redraw display
-                return
-        
+        pot_value = codey.potentiometer.get_value()
+        menu_index = pot_value // 10
+        if menu_index >= len(dice_menu):
+            menu_index = len(dice_menu) - 1
+
+        if menu_index != last_index:
+            codey.display.show(dice_menu[menu_index])
+            print(dice_menu[menu_index])
+            last_index = menu_index
+            menu_pos = "MainMenu.DiceMenu." + dice_menu[menu_index]
+
+        time.sleep(0.05)
+
+
+def Dice(min_rnd, max_rnd):
+    shaken = False
+    codey.display.show("Shake")
+    while True:
         if codey.motion_sensor.get_shake_strength() > 50:
             shaken = True
-            rnd_number = str(random.randint(1, 6))
+            rnd_number = str(random.randint(min_rnd, max_rnd))
             
         if shaken:
-            codey.display.show("  " + rnd_number)
+            codey.display.show(rnd_number)
             shaken = False
             time.sleep(2)
+
 
 def IRDrive():
     speed = 10
@@ -332,72 +338,7 @@ def IRDrive():
         else:
             rocky.stop()
 
-            
-def MainMenu():
-    menu = ["Menu:", "IRDrive", "Battery", " Dice"]
-    menu_index = 0
-    last_index = -1   # force initial refresh
-     
-    # show first item
-    codey.display.show(menu[menu_index])
-    codey.broadcast("Menu")
-    print("Menu")
-
-    while True:
-        nec_address, nec_command = codey.ir.receive_remote_code()
-
-        if nec_command != 0:
-            nec_cmd_name = NECCommandName(nec_address,nec_command)
-
-            # UP (80)
-            if nec_cmd_name == "Up":
-                menu_index = menu_index - 1
-                if menu_index < 0:
-                    menu_index = len(menu) - 1
-
-            # DOWN (18)
-            elif nec_cmd_name == "Down":
-                menu_index = menu_index + 1
-                if menu_index >= len(menu):
-                    menu_index = 0
-
-            # OK 
-            elif nec_cmd_name == "OK":
-                if menu[menu_index] == "IRDrive":
-                    IRDrive()
-                elif menu[menu_index] == "Battery":
-                    Battery()
-                elif menu[menu_index] == " Dice":
-                    Dice()
-
-        # Only refresh display if index changed
-        if menu_index != last_index:
-            codey.display.show(menu[menu_index])
-            last_index = menu_index
-
-def SerialMode():
-
-    print("Welcome to G33k OS")
-    print("Ask for 'help' when you need ;-)")
-        
-    #Serial mode is not working over USB
-    
-@event.start
-def start_cb():
-    simple_eyes="00003c7e7e3c000000003c7e7e3c0000"
-    codey.display.show_image(simple_eyes,0,0)
-    codey.speaker.play_melody("hello")
-    codey.broadcast("hello")
-    #codey.display.show_image(image, pos_x = 3, pos_y = 4)
-    #last_time = time.time()
-    #showing = False
-    time.sleep(1.00)
-    MainMenu()
-
-@event.button_b_pressed
-def button_b_cb():
-    codey.stop_other_scripts()
-    codey.led.off()
+def NECIrDecoder():
     print("NEC Ir Decoder")
     print("Display recieved Infrared NEC Commands in format Address:Command")
     codey.display.show("NEC Ir Decoder")
@@ -406,7 +347,7 @@ def button_b_cb():
 
     while True:
         nec_address, nec_command = codey.ir.receive_remote_code()
-
+        
         if nec_command != 0 and nec_command != last:
             text = "{}:{}".format(nec_address, nec_command)
             codey.display.show(text)
@@ -415,14 +356,117 @@ def button_b_cb():
 
         time.sleep(0.05)
 
-@event.button_a_pressed
-def button_a_cb():
-    codey.stop_other_scripts()
-    MainMenu()
+def SerialMode():
+
+    print("Welcome to G33k OS")
+    print("Ask for 'help' when you need ;-)")
         
-@event.button_c_pressed
-def button_c_cb():
-    codey.stop_other_scripts()
+    #Serial mode is not working over USB
+ 
+def MainMenu():
+    global menu_pos
+    menu_pos = "MainMenu"
+
+    print("MainMenu")
+    codey.broadcast("MainMenu")
+    codey.display.show("MainMenu")
+
+    menu = ["MainMenu", "IRDrive", "Battery", "DiceMenu", "NECIrDecoder"]
+    menu_index = 0
+    pot_value = codey.potentiometer.get_value()
+    menu_index = pot_value // 10
+    if menu_index >= len(menu):
+        menu_index = len(menu) - 1
+    
+    menu_pos = "MainMenu." + menu[menu_index]
+    last_index = menu_index
+     
+    # show first item
+    codey.display.show(menu[menu_index])
+    print(menu[menu_index])
+
+
+    while True:
+        pot_value = codey.potentiometer.get_value()
+        menu_index = pot_value // 10
+        if menu_index >= len(menu):
+            menu_index = len(menu) - 1
+
+        if menu_index != last_index:
+            codey.display.show(menu[menu_index])
+            print(menu[menu_index])
+            last_index = menu_index
+            menu_pos = "MainMenu." + menu[menu_index]
+        
+        time.sleep(0.05)
+
+# GLOBAL VARIABLE DEFINITION
+menu_pos = "MainMenu"
+    
+@event.start
+def start_cb():
+    print("geek OS 2.0.a")
+    global menu_pos
     simple_eyes="00003c7e7e3c000000003c7e7e3c0000"
     codey.display.show_image(simple_eyes,0,0)
-    SerialMode()
+    codey.speaker.play_melody("hello")
+    codey.broadcast("hello")
+    time.sleep(1.00)
+    menu_pos = "MainMenu"
+    MainMenu()
+
+@event.button_b_pressed
+def button_b_cb():
+    global menu_pos
+    print("DEBUG:button_b:menu_pos: " + menu_pos)
+    codey.stop_other_scripts()
+    codey.led.off()
+
+    # split into list
+    parts = menu_pos.split(".")
+
+    # go up one level if possible
+    if len(parts) > 1:
+        menu_pos = ".".join(parts[:-1])
+    else:
+        menu_pos = parts[0]   # stays the same
+
+    # dispatch
+    if menu_pos == "MainMenu":
+        MainMenu()
+    elif menu_pos == "MainMenu.DiceMenu":
+        DiceMenu()
+
+
+@event.button_a_pressed
+def button_a_cb():
+    global menu_pos
+    print("DEBUG:button_a:menu_pos: " + menu_pos)
+    codey.stop_other_scripts()
+    if menu_pos == "MainMenu":
+        MainMenu()
+    elif menu_pos == "MainMenu.IRDrive":
+        IRDrive()
+    elif menu_pos == "MainMenu.Battery":
+        Battery()
+    elif menu_pos == "MainMenu.DiceMenu":
+        DiceMenu()
+    elif menu_pos == "MainMenu.NECIrDecoder":
+        NECIrDecoder()
+    elif menu_pos == "MainMenu.DiceMenu.6d":
+        Dice(1,6)
+    elif menu_pos == "MainMenu.DiceMenu.10d":
+        Dice(1,10)
+    elif menu_pos == "MainMenu.DiceMenu.20d":
+        Dice(1,20)
+    elif menu_pos == "MainMenu.DiceMenu.100d":
+        Dice(1,100)
+    elif menu_pos == "MainMenu.DiceMenu.2x6d":
+        Dice(2,12)
+
+@event.button_c_pressed
+def button_c_cb():
+    global menu_pos
+    print("DEBUG:button_c:menu_pos: " + menu_pos)
+    codey.stop_other_scripts()
+    MainMenu()

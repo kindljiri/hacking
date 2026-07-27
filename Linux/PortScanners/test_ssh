@@ -1,0 +1,132 @@
+#! /bin/sh
+
+# Simple script testing SSH connectivity and credentials to devices given in file, 
+# one device per line.
+# Credentials given -u and -p parametrs !!NOT SECURE.
+# If credentials are not given script will ask.
+# 
+Author='Jiri Kindl'
+Version='20250204'
+# Version history at end of the file
+
+#LOAD LIBRARIES
+LIBPATH="$(readlink -f "$0" | rev | cut -d'/' -f3- | rev)/libs"
+. "$LIBPATH/libip"
+
+usage()
+{
+  cat << EOF
+  Usage: $0 -h hostfile [-u username] [-p password] [-c command] 
+
+  -h hostfile
+           file with the list of host to test (one per line)
+
+  -u username           
+           if username is not provided script will prompt you
+
+  -p password           
+           if password is not provided script will prompt you, It's more SECURE to not provide password as parametr
+
+  -c command
+           by default hostname
+		   
+
+  EXAMPLES:
+  run hostname command on servers in allServers.txt file
+  ./$0 -h allServers.txt -u 'domain\user'
+  
+  run date command on servers in allServers.txt file
+  ./$0 -h allServers.txt -u 'domain\user' -c 'date'
+  
+  run commad as root on servers in allServers.txt file (but you need to be able sudo without providing password for sudo)
+  ./$0 -h allServers.txt -u 'domain\user' -c 'sudo rm -rf /opt/myApp'
+  
+  run commad as root on servers in allServers.txt file and providing the password (sudo -S will accept the password from pipe)
+  !!! edit your history (~/.bash_history or ~/.history) cause this is disclosing your pass in history
+  ./$0 -h allServers.txt -u 'domain\user' -c 'echo "MySecretPassword" | sudo -S cat /etc/hosts'
+EOF
+}
+
+hosttestssh()
+{
+  #Using sed to remove windows eol and trim the Text (remove leading and trailing spaces)
+  for TEST_HOST in $(sed -e 's/\r//' $HFILE | sed 's/^[ \t]*//' |sed 's/[ \t]*$//')
+  do
+    res=$(sshpass -p $PASSWORD ssh -l $USERNAME -oStrictHostKeyChecking=no $TEST_HOST $COMMAND 2>&1)
+	  echo "$TEST_HOST,$res"
+  done
+}
+#main
+
+HFILE=''
+USERNAME=''
+PASSWORD=''
+COMMAND='hostname'
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -h | --hostfile )       shift
+                                HFILE=$1
+                                ;;
+        -p | --password )       shift
+                                PASSWORD=$1
+                                ;;
+        -u | --username )       shift
+                                USERNAME=$1
+                                ;;
+        -c | --command )        shift
+                                COMMAND=$1
+                                ;;
+        --help )                usage
+                                exit 0
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+
+#Check if sshpass is installed
+if sshpass 2>&1 | grep -q "sshpass: command not found"
+then 
+  echo "Missing sshpass, install ssh pass: " >&2
+  echo "on RHEL: yum -y install sshpass" >&2
+  echo "on Debian: apt-get install sshpass" >&2
+fi
+
+#check hostname file existence
+if [ -z $HFILE ]
+then
+  echo "ERROR: no hostfile entered" >&2
+  usage
+  exit 1
+fi
+if [ ! -e $HFILE ]
+then
+  echo "ERROR: $HFILE not exist" >&2
+  usage
+  exit 1
+fi
+
+if [ -z $USERNAME ]
+then
+  printf "Username: "
+  read USERNAME
+fi
+
+if [ -z $PASSWORD ]
+then
+  stty -echo
+  printf "Password: "
+  read PASSWORD
+  stty echo
+  printf "\n"
+fi
+
+
+echo "Host,Results of $COMMAND"
+hosttestssh
+exit 0
+
+#Version,comment
+#20210425,ADDED: examples in the help

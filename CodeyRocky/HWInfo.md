@@ -2,6 +2,7 @@
 
 # Hardware specs:
 
+|-------------------|-------|
 | Main control/chip | ESP32 |
 | Processor | Tensilica LX6 dual-core processor |
 | Clock speed | 240 MHz（Max）|

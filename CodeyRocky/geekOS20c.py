@@ -114,7 +114,7 @@ def Battery():
     v = codey.battery.get_voltage()
     v = codey.battery.get_voltage()
     vs = str(v)
-    v = vs[0:4]
+    v = vs[0:3]
 
     # Convert percentage to index 0–10
     idx = p // 10
@@ -158,7 +158,7 @@ def DiceMenu():
     codey.broadcast("Dice")
     codey.display.show("Dice") 
     menu_pos = "MainMenu.DiceMenu"
-    dice_menu = ["6d", "10d", "20d", "100d", "2x6d"]
+    dice_menu = ["6d", "10d", "20d", "100d", "2:6d"]
     pot_value = codey.potentiometer.get_value()
     menu_index = pot_value // 10
     if menu_index >= len(dice_menu):
@@ -181,7 +181,6 @@ def DiceMenu():
 
         time.sleep(0.05)
 
-
 def Dice(min_rnd, max_rnd):
     shaken = False
     codey.display.show("Shake")
@@ -195,6 +194,48 @@ def Dice(min_rnd, max_rnd):
             shaken = False
             time.sleep(2)
 
+def SoundMenu():
+    global menu_pos
+    print("MainMenu.SoundMenu")
+    codey.broadcast("SoundMenu")
+    codey.display.show("Sound") 
+    menu_pos = "MainMenu.SoundMenu"
+    sound_menu = [ "Volume", "Say1", "Say2" "LoudnessMonitor"]
+    pot_value = codey.potentiometer.get_value()
+    menu_index = pot_value // 10
+    if menu_index >= len(sound_menu):
+        menu_index = len(sound_menu) - 1
+    
+    menu_pos = "MainMenu.DiceMenu." + sound_menu[menu_index]
+    last_index = menu_index
+    
+    while True:
+        pot_value = codey.potentiometer.get_value()
+        menu_index = pot_value // 10
+        if menu_index >= len(sound_menu):
+            menu_index = len(sound_menu) - 1
+    
+        if menu_index != last_index:
+            codey.display.show(sound_menu[menu_index])
+            print(sound_menu[menu_index])
+            last_index = menu_index
+            menu_pos = "MainMenu.DiceMenu." + sound_menu[menu_index]
+    
+        time.sleep(0.05)
+
+def SayMenu():
+    say1_menu = [ "hello", "hi", "bye", "yeah", "wow", "laugh", "hum", "sad", "sigh", "annoyed", "angry", "scared", "pettish", "curious", "embarrassed", "ready", "sprint", "snore", "meow", "start", "switch" ]
+    say2_menu = [ "beeps", "buzz", "air-out", "explosion", "gotcha", "painful", "jump", "laser", "level-up", "low-energy", "metal-clash", "prompt-tone", "right", "wrong", "ringtone", "score", "shot", "step_1", "step_2", "activate", "warning" ]
+    global menu_pos
+    print("MainMenu.SoundMenu.SayMenu")
+    codey.broadcast("SayMenu")
+    codey.display.show("Sound") 
+    menu_pos = "MainMenu.SoundMenu.SayMenu"
+
+def Say():
+    global menu_pos
+    file_name = menu_pos.split(".")[-1]
+    codey.speaker.play_melody(file_name)
 
 def IRDrive():
     speed = 10
@@ -420,6 +461,7 @@ def MainMenu():
         
         time.sleep(0.05)
 
+
 # GLOBAL VARIABLE DEFINITION
 menu_pos = "MainMenu"
     
@@ -479,7 +521,7 @@ def button_a_cb():
         Dice(1,20)
     elif menu_pos == "MainMenu.DiceMenu.100d":
         Dice(1,100)
-    elif menu_pos == "MainMenu.DiceMenu.2x6d":
+    elif menu_pos == "MainMenu.DiceMenu.2:6d":
         Dice(2,12)
     elif menu_pos == "MainMenu.NECIrDecoder":
         NECIrDecoder()

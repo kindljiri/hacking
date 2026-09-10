@@ -430,7 +430,7 @@ def MainMenu():
     menu_pos = "MainMenu"
 
     print("MainMenu")
-    codey.broadcast("MainMenu")
+    codey.ir.send("MainMenu")
     codey.display.show("MainMenu")
 
     menu = ["MainMenu", "IRDrive", "Battery", "DiceMenu", "NECIrDecoder", "LoudnessMonitor"]
@@ -455,6 +455,7 @@ def MainMenu():
 
         if menu_index != last_index:
             codey.display.show(menu[menu_index])
+            codey.ir.send(menu[menu_index])
             print(menu[menu_index])
             last_index = menu_index
             menu_pos = "MainMenu." + menu[menu_index]
@@ -464,15 +465,17 @@ def MainMenu():
 
 # GLOBAL VARIABLE DEFINITION
 menu_pos = "MainMenu"
+osVersion = "2.0.c"
     
 @event.start
 def start_cb():
-    print("geek OS 2.0.b")
+    print("geek OS " + osVersion)
+    codey.ir.send("geek OS " + osVersion)
     global menu_pos
     simple_eyes="00003c7e7e3c000000003c7e7e3c0000"
     codey.display.show_image(simple_eyes,0,0)
     codey.speaker.play_melody("hello")
-    codey.broadcast("hello")
+    codey.ir.send("hello")
     time.sleep(1.00)
     menu_pos = "MainMenu"
     MainMenu()

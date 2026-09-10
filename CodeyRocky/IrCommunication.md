@@ -27,11 +27,13 @@ Raw Signals: 8870 4568 510 646 460 644 462 672 460 696 406 622 510 672 458 620 4
 
 We can see:
  - AGC Header ~13.5 ms ($9000\,\mu\text{s} + 4500\,\mu\text{s}$)
- - 32 0s and 1s ($500\,\mu\text{s} $1600\,\mu\text{s})
+ - 32 0s and 1s ($500\,\mu\text{s} , 1600\,\mu\text{s}$)
  - 32ms end of packet
 
-That looks like a NEC protocol specially if you translate to 1s and 0s and see that 1st is inverse of 2nd byte and 3rd is inverse of 4th
+That looks like a NEC protocol specially if you translate to 1s and 0s and see that 1st is inverse of 2nd byte and 3rd is inverse of 4th.
+
 So knowing what text I'm sending I confirmed that 3rd bytes only is the single character and bits are Reverse in each individual 8-bit byte array (LSB -> MSB).
+
 So in conclusion: 
 `ir.send(str)`
 1. Takes the input string and appends a `\n` (`0x0A`) newline character.

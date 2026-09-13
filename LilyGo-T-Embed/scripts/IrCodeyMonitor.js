@@ -173,6 +173,11 @@ function bitsToHexBytes(bitString) {
 //keyboard.setLongPress(true); 
 printMessage("IR Monitor Started. Press ESC to exit.");
 
+var logFile = {
+    fs: "sd",
+    path: "/logs/IrCodeyMonitor.txt"
+};
+
 while (true) {
     
     if (keyboard.getEscPress(100)) {
@@ -183,7 +188,7 @@ while (true) {
     var signal = ir.readRaw(2000);
 
     if (signal) {
-        storage.write("/logs/IrCodeyMonitor.txt", "Received Signal:\n", "a");
+        storage.write(logFile, "Received Signal:\n", "a");
 
         // As Raw IR data(signal) looks like below:
         // Filetype: IR signals file
@@ -210,7 +215,7 @@ while (true) {
                 break; // Stop looking once found
             }
         }
-        storage.write("/logs/IrCodeyMonitor.txt", "Raw Signals: " + rawDataLine + "\n", "a");
+        storage.write(logFile, "Raw Signals: " + rawDataLine + "\n", "a");
 
         // 1. Split text on spaces
         var tokens = rawDataLine.split(/\s+/); // regex \s+ handles single or multiple spaces
@@ -231,9 +236,9 @@ while (true) {
                 var bits = rawNECToBits(rawNECPacket);
                 // rawNECToBits returns a bit string, not an array.
                 var hexBytes = bitsToHexBytes(bits);
-                storage.write("/logs/IrCodeyMonitor.txt", "Raw Packet: " + rawNECPacket.join(" ") + "\n", "a");
-                storage.write("/logs/IrCodeyMonitor.txt", "Extracted Bits: " + bits + "\n", "a");
-                storage.write("/logs/IrCodeyMonitor.txt", "Hex Bytes: " + hexBytes + "\n", "a");
+                storage.write(logFile, "Raw Packet: " + rawNECPacket.join(" ") + "\n", "a");
+                storage.write(logFile, "Extracted Bits: " + bits + "\n", "a");
+                storage.write(logFile, "Hex Bytes: " + hexBytes + "\n", "a");
                 rawNECPacket = [];
             }
         }

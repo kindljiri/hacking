@@ -1,0 +1,191 @@
+NEC:
+name: Unknown
+type: raw
+frequency: 38000
+duty_cycle: 0.33
+data: 9074 4448 550 1688 600 540 524 642 524 592 600 514 598 566 548 592 548 594 574 564 602 1664 574 1692 548 1716 550 1740 550 1690 600 1664 524 1740 548 1718 526 1766 522 592 524 642 524 1716 574 566 602 538 574 564 550 592 548 594 548 1718 550 1740 522 594 550 1742 574 1664 574 1692 550 40144 9026 2254 550
+#
+
+Pick an option
+--------------
+1) Retry
+2) IR Analyzer Menu
+3) Analyze data
+4) Exit
+3
+COMMAND: 3
+ERROR: Command not found at '3'
+#
+Pick an option
+--------------
+1) Retry
+2) IR Analyzer Menu
+3) Analyze data
+4) Exit
+3
+
+=== TIMING DISTRIBUTION (Combined) ===
+500 µs [17]: #################
+600 µs [33]: #################################
+1700 µs [15]: ###############
+1800 µs [1]: #
+2300 µs [1]: #
+4400 µs [1]: #
+9000 µs [1]: #
+9100 µs [1]: #
+40100 µs [1]: #
+Header detected at token index: 0
+Header Timings -> Mark: 9074 , Space: 4448
+
+QNAP:
+Pick an option
+--------------
+1) Retry
+2) IR Analyzer Menu
+3) Analyze data
+4) Exit
+1
+Waiting for signal...
+IR signal captured!
+Filetype: IR signals file
+Version: 1
+#
+#
+name: Unknown
+type: raw
+frequency: 38000
+duty_cycle: 0.33
+data: 2626 924 442 456 414 484 416 956 388 946 1312 892 468 454 390 482 416 480 468 430 468 430 468 430 416 506 414 456 444 456 442 456 864 488 416 506 390 506 364 952 414 510 416 456 444 456 466 428 892 906 440 458 442 454 444 456 864 930 468 430 470 428 890 906 442
+#
+
+Pick an option
+--------------
+1) Retry
+2) IR Analyzer Menu
+3) Analyze data
+4) Exit
+3
+COMMAND: 3
+ERROR: Command not found at '3'
+3
+
+=== TIMING DISTRIBUTION (Combined) ===
+400 µs [26]: ##########################
+500 µs [25]: #########################
+900 µs [10]: ##########
+1000 µs [2]: ##
+1300 µs [1]: #
+2600 µs [1]: #
+Header detected at token index: 0
+Header Timings -> Mark: 2626 , Space: 924
+
+
+NEC RU-M118
+Version: 1
+#
+#
+name: Unknown
+type: raw
+frequency: 38000
+duty_cycle: 0.33
+data: 7924 4002 474 524 450 526 498 1502 420 554 420 1556 468 1504 420 1580 396 1580 444 4052 426 1524 448 1552 422 554 422 552 446 530 444 1554 422 554 470 506 468 18610 7928 4000 446 554 422 554 420 1552 474 524 424 1552 474 1502 474 1550 424 1552 422 4028 422 1552 448 1528 448 554 396 604 420 554 420 1556 420 578 446 528 448 18630 7852 4078 448 526 448 526 448 1526 448 552 422 1554 472 1528 446 1554 420 1554 420 4054 422 1552 422 1554 420 578 396 554 472 502 472 1554 394 552 446 554 420 18658 7876 4030 420 604 370 604 420 1554 420 578 396 1578 446 1528 446 1556 392 1582 420 4028 448 1552 422 1556 418 580 394 580 446 502 472 1554 422 552 422 528 446 18638 7922 4028 420 578 396 578 448 1528 418 604 398 1554 418 1556 420 1580 396 1554 446 4056 394 1578 396 1578 396 628 396 578 396 554 420 1580 396 554 470 504 472 18608 7900 4028 446 554 420 578 396 1554 446 554 420 1554 446 1554 420 1580 396 1580 446 4004 420 1580 446 1528 446 554 420 554 420 554 420 1580 396 554 444 556 418 18662 7874 4030 444 554 420 554 446 1554 420 580 396 1578 448 1528 446 1556 368 1630 394 4056 422 1578 372 1604 394 580 394 580 446 528 396 1604 422 552 396 578 398 18658 7874 4078 420 580 394 556 442 1532 420 580 396 1580 420 1556 420 1604 372 1602 396 4082 370 1606 394 1580 394 604 370 604 396 554 420 1604 370 604 394 582 392 18712 7822 4080 394 630 346 628 370 1606 370 604 370 1606 394 1580 396 1630 344 1630 370 4056 394 1606 394 1556 420 604 370 606 392 580 394 1630 344 630 370 604 370 18710 7824 4080 396 604 370 580 420 1580 394 580 394 1630 370 1604 370 1606 368 1606 394 4080 370 1604 396 1580 394 630 344 604 394 604 370 1632 344 604 394 606 368 18684 7850 4082 394 604 370 604 396 1580 396 604 370 1604 396 1580 394 1630 344 1606 394 4082 368 1630 370 1606 370 628 344 604 396 580 394 1606 370 606 394 582 392 18686 7850 4106 368 632 344 630 370 1606 368 606 368 1630 368 1606 368 1608 368 1606 394 4082 368 1606 394 1606 370 628 346 604 394 582 392 1606 368 606 394 580 394
+#
+
+Pick an option
+--------------
+1) Retry
+2) IR Analyzer Menu
+3) Analyze data
+4) Exit
+3
+InternalError: out of memory
+    at split (native)
+    at AnalyzeData (IrAnalyzerSerial.js:74:38)
+InternalError: out of memory
+                                at split (native)
+                                                     at AnalyzeData (IrAnalyzerSerial.js:74:38)
+                                                                                                   at IrRaw (IrAnalyzerSerial.js:205:32)
+
+                                                                                                                                        deinit interpreter:
+                                                                                                                                                           PSRAM: [Free: 0, max alloc: 0],
+                                                                                                                                                                                          RAM: [Free: 83400, max alloc: 31732]
+
+
+Philips 
+
+IR Analyzer Menu
+----------------
+1) Raw
+2) Automatic
+3) Settings
+4) Exit
+1
+1
+Raw
+Waiting for signal...
+IR signal captured!
+Filetype: IR signals file
+Version: 1
+#
+#
+name: Unknown
+type: raw
+frequency: 38000
+duty_cycle: 0.33
+data: 2610 842 406 922 432 452 430 452 1288 1362 378 504 380 504 378 502 406 476 406 476 430 452 380 504 378 504 818 948 820 498 378 504 378 952 404 476 408
+#
+
+Pick an option
+--------------
+1) Retry
+2) IR Analyzer Menu
+3) Analyze data
+4) Exit
+3
+COMMAND: 3
+ERROR: Command not found at '3'
+3
+COMMAND: 3
+ERROR: Command not found at '3'
+3
+
+=== TIMING DISTRIBUTION (Combined) ===
+400 µs [15]: ###############
+500 µs [13]: #############
+800 µs [3]: ###
+900 µs [2]: ##
+1000 µs [1]: #
+1300 µs [1]: #
+1400 µs [1]: #
+2600 µs [1]: #
+Header detected at token index: 0
+Header Timings -> Mark: 2610 , Space: 842
+Pick an option
+--------------
+1) Retry
+2) IR Analyzer Menu
+3) Analyze data
+4) Exit
+2
+IR Analyzer Menu
+----------------
+1) Raw
+2) Automatic
+3) Settings
+4) Exit
+2
+2
+Automatic
+Waiting for signal...
+IR signal captured!
+Filetype: IR signals file
+Version: 1
+#
+#
+name: Unknown
+type: parsed
+protocol: RC6
+address: 00 00 00 00
+command: 00 00 00 00
+bits: 0
+value: 00 00 00 00

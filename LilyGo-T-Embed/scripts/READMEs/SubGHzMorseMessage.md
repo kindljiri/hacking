@@ -13,4 +13,7 @@ Tested with a LilyGo T-Embed + CC1101 running Bruce 1.16.1.
 
 Also output all info in console log, which can be seen in serial console.
 
+Frequency correction: during testing on my LilyGo T-Embed + CC1101 i find that it add 54kHz
+In config I have set this to -0.054 and it works perfectly. I used SDR to measure it.
+
 [Main Page](../../README.md)

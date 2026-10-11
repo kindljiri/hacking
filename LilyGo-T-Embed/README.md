@@ -7,4 +7,4 @@
 
 ## Custom scripts
 
-- [SubGHzMorseMessage](Scripts/READMEs/SubGHzMorseMessage.md)
+- [SubGHzMorseMessage](scripts/READMEs/SubGHzMorseMessage.md)

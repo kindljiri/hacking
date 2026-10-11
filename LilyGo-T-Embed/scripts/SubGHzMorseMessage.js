@@ -8,14 +8,23 @@ var dialog = require("dialog");
 var keyboard = require("keyboard");
 var display = require("display");
 
-function getInputValue(rawInput) {
+function getInputValue(rawInput, defaultValue) {
+    if (rawInput === null || rawInput === undefined) return defaultValue;
     const inputText = "" + rawInput;
-    return inputText.substring(inputText.lastIndexOf(":") + 1).trim();
+    const colonIndex = inputText.lastIndexOf(":");
+    const inputValue = (colonIndex >= 0 ? inputText.substring(colonIndex + 1) : inputText).trim();
+    return inputValue === "" ? defaultValue : inputValue;
 }
 
 function generateMorsePattern() {
-    const message = getInputValue(keyboard.keyboard("Morse message:", "HELLO"));
-    const dotTimeMs = parseFloat(getInputValue(keyboard.numKeyboard("Dot time (ms):", "0.5")));
+    const message = getInputValue(keyboard.keyboard("Morse message (Def: test):", "test"), "test");
+    const dotTimeMs = parseFloat(getInputValue(
+        keyboard.numKeyboard("Dot time (Def: 120 ms):", "120"), "120"
+    ));
+    if (isNaN(dotTimeMs) || dotTimeMs <= 0) {
+        dialog.error("Invalid dot time. Enter a value greater than 0 ms.");
+        return null;
+    }
     const dotTime = Math.round(dotTimeMs * 1000);
     const dashTime = dotTime * 3;
     const gapTime = dotTime;
@@ -64,24 +73,25 @@ function generateMorsePattern() {
 
 // === MAIN =============
 
-const version = "v1.0";
+const version = "v1.1.0";
+var freqMHzCorrection = 0.0; // Adjust this if your device transmits high or low
 
 console.log("SubGHz Morse Message " + version);
 
 // One T-Embed measured about +0.054 MHz offset; this may be unit-specific.
-// Measure your device's carrier and compensate the entered frequency as needed.
+// Measure your device's carrier; use a negative correction if it transmits high.
 // 1. Get the raw input string from the keyboard
-const rawInput = keyboard.numKeyboard("Frequency (MHz):", "433.92");
+const rawInput = keyboard.numKeyboard("Frequency (Def: 449.81 MHz):", "449.81");
 var logMsg = "Frequency input by user: " + rawInput;
 console.log(logMsg);
 // 2. Check if the user cancelled or left it blank
-if (rawInput === null || rawInput === undefined || rawInput === "") {
+if (rawInput === null || rawInput === undefined) {
     dialog.error("Input cancelled.", true);
     exit();
 }
 
 // 3. Parse and validate the number safely
-const freqMHz = parseFloat(getInputValue(rawInput));
+const freqMHz = parseFloat(getInputValue(rawInput, "449.81"));
 
 if (isNaN(freqMHz) || freqMHz < 300 || freqMHz > 1000) {
     var errMsg = "Invalid frequency." + freqMHz + " MHz not in range (300-1000 MHz)";
@@ -90,8 +100,10 @@ if (isNaN(freqMHz) || freqMHz < 300 || freqMHz > 1000) {
     exit();
 }
 
+
+
 const rawData = generateMorsePattern();
-if (rawData.length > 0) {
+if (rawData && rawData.length > 0) {
     console.log("Generated Morse:");
     console.log("RAW_Data: " + rawData.join(" ").substring(0, 100) + "...");
 
@@ -102,9 +114,11 @@ if (rawData.length > 0) {
         exit();
     }
 
+    var txFreqMHz = freqMHz + freqMHzCorrection;
+
     if (rawData.length > 2048) {
         dialog.error("Morse message is too long to transmit.");
-    } else if (subghz.txSetup(freqMHz)) {
+    } else if (subghz.txSetup(txFreqMHz)) {
         const transmitted = subghz.txPulses(rawData);
         subghz.txEnd();
         if (transmitted) {

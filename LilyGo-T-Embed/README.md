@@ -8,3 +8,4 @@
 ## Custom scripts
 
 - [SubGHzMorseMessage](scripts/READMEs/SubGHzMorseMessage.md)
+- [SubGHzMorseBeacon](scripts/READMEs/SubGHzMorseBeacon.md)

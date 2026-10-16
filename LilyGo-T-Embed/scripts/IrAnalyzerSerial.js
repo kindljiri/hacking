@@ -1,115 +1,112 @@
-var ir = require("ir");
-var display = require("display");
-var keyboard = require("keyboard");
-var dialog = require("dialog");
+const version = "v1.0"
 
-const version = "v0.9.17";
-
+// name,type,headerMark,headerSpace,bitMark,zeroSpace,oneSpace,eopGap,totalBits
+// PULSE_WIDTH rows use these pulse columns for bitSpace, zeroMark, and oneMark.
+// MANCHESTER rows use bitMark for the half-bit unit time.
 var KNOWN_PROTOCOLS = [
-    {
-        name: "NEC",
-        type: "PULSE_DISTANCE",
-        headerMark: 9000,
-        headerSpace: 4500,
-        bitMark: 560,       // Fixed mark duration for all bits
-        zeroSpace: 560,     // Short space = Bit 0
-        oneSpace: 1690,     // Long space = Bit 1
-        eopGap: 40000,      // Minimum trailing gap before repeat/frame end
-        totalBits: 32
-    },
-    {
-        name: "SAMSUNG",
-        type: "PULSE_DISTANCE",
-        headerMark: 4500,
-        headerSpace: 4500,
-        bitMark: 560,
-        zeroSpace: 560,
-        oneSpace: 1690,
-        eopGap: 40000,
-        totalBits: 32
-    },
-    {
-        name: "SONY_SIRC",
-        type: "PULSE_WIDTH",
-        headerMark: 2400,
-        headerSpace: 600,
-        zeroMark: 600,      // Short mark = Bit 0
-        oneMark: 1200,      // Long mark = Bit 1
-        bitSpace: 600,      // Fixed space duration between marks
-        eopGap: 25000,
-        totalBits: 12       // Standard SIRC is 12 bits (or 15, 20)
-    },
-    {
-        name: "PANASONIC",
-        type: "PULSE_DISTANCE",
-        headerMark: 3500,
-        headerSpace: 1750,
-        bitMark: 430,
-        zeroSpace: 430,
-        oneSpace: 1300,
-        eopGap: 10000,
-        totalBits: 48
-    },
-    {
-        name: "PIONEER",
-        type: "PULSE_DISTANCE",
-        headerMark: 8400,
-        headerSpace: 4200,
-        bitMark: 500,
-        zeroSpace: 500,
-        oneSpace: 1500,
-        eopGap: 25000,
-        totalBits: 32
-    },
-    {
-        name: "RC6_MODE0",
-        type: "MANCHESTER",
-        headerMark: 2666,
-        headerSpace: 889,
-        unitTime: 444,      // Half-bit time slice
-        eopGap: 10000,
-        totalBits: 20
-    }
+    ["NEC", "PULSE_DISTANCE", 9000, 4500, 560, 560, 1690, 40000, 32],
+    ["SAMSUNG", "PULSE_DISTANCE", 4500, 4500, 560, 560, 1690, 40000, 32],
+    ["SONY_SIRC", "PULSE_WIDTH", 2400, 600, 600, 600, 1200, 25000, 12],
+    ["PANASONIC", "PULSE_DISTANCE", 3500, 1750, 430, 430, 1300, 10000, 48],
+    ["PIONEER", "PULSE_DISTANCE", 8400, 4200, 500, 500, 1500, 25000, 32],
+    ["RC6_MODE0", "MANCHESTER", 2666, 889, 444, 0, 0, 10000, 20]
 ];
+var configPath = {
+    fs: "sd",
+    path: "/jsApps/config/KNOWN_PROTOCOLS.conf"
+};
+
+function loadKnownProtocols() {
+    try {
+        var storage = require("storage");
+        var contents = storage.read(configPath);
+        if (!contents) return;
+
+        var protocols = JSON.parse(contents);
+        if (!Array.isArray(protocols) || protocols.length === 0 || protocols.length > 31) {
+            console.log("Invalid protocol file; using built-in profiles.");
+            return;
+        }
+
+        for (var i = 0; i < protocols.length; i++) {
+            var proto = protocols[i];
+            if (!Array.isArray(proto) || proto.length !== 9 ||
+                typeof proto[0] !== "string" ||
+                (proto[1] !== "PULSE_DISTANCE" && proto[1] !== "PULSE_WIDTH" && proto[1] !== "MANCHESTER")) {
+                console.log("Invalid protocol row; using built-in profiles.");
+                return;
+            }
+            for (var j = 2; j < 9; j++) {
+                if (typeof proto[j] !== "number" || !isFinite(proto[j])) {
+                    console.log("Invalid protocol timing; using built-in profiles.");
+                    return;
+                }
+            }
+        }
+
+        KNOWN_PROTOCOLS = protocols;
+        console.log("Loaded protocol profiles from " + configPath.path);
+    } catch (error) {
+        console.log("Using built-in protocol profiles.");
+    }
+}
 
 // Helper: Checks if a canonical value exists in histogram within tolerance
-function findInHistogram(histogram2D, target, tolerance) {
+// Histogram helpers use [duration, count] pairs.
+function findInHg(hg, target, tolerance) {
     if (!tolerance) tolerance = 250;
-    for (var i = 0; i < histogram2D.length; i++) {
-        var duration = histogram2D[i][0];
+    for (var i = 0; i < hg.length; i++) {
+        var duration = hg[i][0];
         if (Math.abs(duration - target) <= tolerance) {
-            return histogram2D[i]; // Returns [duration, count]
+            return hg[i];
         }
     }
     return null;
 }
 
-// Helper: Finds largest gap duration in histogram (candidate for EOP)
-function findEopInHistogram(histogram2D, minEopThreshold) {
-    if (!minEopThreshold) minEopThreshold = 5000;
-    var maxGap = 0;
-    for (var i = 0; i < histogram2D.length; i++) {
-        var duration = histogram2D[i][0];
-        if (duration >= minEopThreshold && duration > maxGap) {
-            maxGap = duration;
-        }
+// Returns sorted 2D array: [[duration, count], [duration, count], ...]
+var dataCursor = 0;
+
+function nextTiming(signal, dataEnd) {
+    var sign = 1;
+    var value = 0;
+    var digits = 0;
+    var code = 0;
+
+    while (dataCursor < dataEnd) {
+        code = signal.charCodeAt(dataCursor);
+        if ((code >= 48 && code <= 57) || code === 45) break;
+        dataCursor++;
     }
-    return maxGap;
+    if (dataCursor >= dataEnd) return null;
+
+    if (signal.charCodeAt(dataCursor) === 45) {
+        sign = -1;
+        dataCursor++;
+    }
+    while (dataCursor < dataEnd) {
+        code = signal.charCodeAt(dataCursor);
+        if (code < 48 || code > 57) break;
+        value = value * 10 + code - 48;
+        digits++;
+        dataCursor++;
+    }
+    return digits ? sign * value : null;
 }
 
-// Returns sorted 2D array: [[duration, count], [duration, count], ...]
-function getHistogram(rawTokens, binSize) {
+function getHg(signal, dataStart, dataEnd, binSize) {
     if (!binSize) binSize = 100;
 
     var histoMap = {};
     var bins = [];
 
-    for (var j = 0; j < rawTokens.length; j++) {
-        var token = rawTokens[j].trim();
-        if (token === "") continue;
-
-        var val = parseInt(token, 10);
-        if (isNaN(val) || val === 0) continue;
+    dataCursor = dataStart;
+    var val = nextTiming(signal, dataEnd);
+    while (val !== null) {
+        if (val === 0) {
+            val = nextTiming(signal, dataEnd);
+            continue;
+        }
 
         // Neutral timing duration
         var absVal = val < 0 ? -val : val;
@@ -121,6 +118,7 @@ function getHistogram(rawTokens, binSize) {
         } else {
             histoMap[bin] = histoMap[bin] + 1;
         }
+        val = nextTiming(signal, dataEnd);
     }
 
     // Sort bin values ascending (mJS compatible Bubble Sort)
@@ -135,24 +133,24 @@ function getHistogram(rawTokens, binSize) {
     }
 
     // Construct final 2D array [[binValue, count], ...]
-    var histogram2D = [];
+    var hg = [];
     for (var k = 0; k < bins.length; k++) {
         var b = bins[k];
-        histogram2D.push([b, histoMap[b]]);
+        hg.push([b, histoMap[b]]);
     }
 
-    return histogram2D;
+    return hg;
 }
 
 // Formats and prints the 2D array histogram
-function printHistogram(histogram2D, title) {
+function printHg(hg, title) {
     if (!title) title = "TIMING DISTRIBUTION";
     
     serial.println("\n=== " + title + " ===");
 
-    for (var i = 0; i < histogram2D.length; i++) {
-        var duration = histogram2D[i][0];
-        var count = histogram2D[i][1];
+    for (var i = 0; i < hg.length; i++) {
+        var duration = hg[i][0];
+        var count = hg[i][1];
 
         // Draw ASCII bar
         var bar = "";
@@ -164,172 +162,133 @@ function printHistogram(histogram2D, title) {
     }
 }
 
-function classifyFromHistogram(histogram2D, tolerance) {
+function protoClassify(hg, signal, dataStart, dataEnd, tolerance) {
     if (!tolerance) tolerance = 250;
-    var matchedCandidates = [];
+
+    var candidates = 0;
+    var matchedIndex = -1;
+    var matchedOffset = 7;
+    var rawHeader = [];
+    dataCursor = dataStart;
+    for (var h = 0; h < 6; h++) {
+        var timing = nextTiming(signal, dataEnd);
+        if (timing === null) break;
+        rawHeader.push(timing);
+    }
+    var searchLimit = Math.min(rawHeader.length - 1, 6);
 
     for (var p = 0; p < KNOWN_PROTOCOLS.length; p++) {
         var proto = KNOWN_PROTOCOLS[p];
         var headerMatch = false;
         var payloadMatch = false;
 
-        // 1. Check Header components in Histogram
-        if (proto.header) {
-            var hMark = findInHistogram(histogram2D, proto.header.mark, tolerance);
-            var hSpace = findInHistogram(histogram2D, proto.header.space, tolerance);
-            if (hMark && hSpace) {
-                headerMatch = true;
-            }
+        if (proto[2] > 0 && proto[3] > 0 &&
+            findInHg(hg, proto[2], tolerance) &&
+            findInHg(hg, proto[3], tolerance)) {
+            headerMatch = true;
         }
 
-        // 2. Check Payload timing ratios in Histogram
-        if (proto.encoding === "PULSE_DISTANCE") {
-            var bMark = findInHistogram(histogram2D, proto.payload.bitMark, tolerance);
-            var zSpace = findInHistogram(histogram2D, proto.payload.zeroSpace, tolerance);
-            var oSpace = findInHistogram(histogram2D, proto.payload.oneSpace, tolerance);
-            if (bMark && (zSpace || oSpace)) {
+        if (proto[1] === "PULSE_DISTANCE") {
+            if (findInHg(hg, proto[4], tolerance) &&
+                (findInHg(hg, proto[5], tolerance) || findInHg(hg, proto[6], tolerance))) {
                 payloadMatch = true;
             }
-        } else if (proto.encoding === "PULSE_WIDTH") {
-            var bSpace = findInHistogram(histogram2D, proto.payload.bitSpace, tolerance);
-            var zMark = findInHistogram(histogram2D, proto.payload.zeroMark, tolerance);
-            var oMark = findInHistogram(histogram2D, proto.payload.oneMark, tolerance);
-            if (bSpace && (zMark || oMark)) {
+        } else if (proto[1] === "PULSE_WIDTH") {
+            if (findInHg(hg, proto[4], tolerance) &&
+                (findInHg(hg, proto[5], tolerance) || findInHg(hg, proto[6], tolerance))) {
                 payloadMatch = true;
             }
+        } else if (proto[1] === "MANCHESTER") {
+            if (findInHg(hg, proto[4], tolerance)) payloadMatch = true;
         }
 
-        // 3. Check EOP
-        var detectedEop = findEopInHistogram(histogram2D, proto.eopMin);
+        if (!headerMatch || !payloadMatch) continue;
+        candidates |= 1 << p;
 
-        if (headerMatch && payloadMatch) {
-            matchedCandidates.push({
-                protocol: proto,
-                eopDetected: detectedEop,
-                confidence: "HIGH"
-            });
-        } else if (headerMatch || payloadMatch) {
-            matchedCandidates.push({
-                protocol: proto,
-                eopDetected: detectedEop,
-                confidence: "MEDIUM"
-            });
-        }
-    }
-
-    return matchedCandidates;
-}
-
-function verifyHeaderInRaw(rawTokens, candidateProtocols, tolerance) {
-    if (!tolerance) tolerance = 250;
-
-    // Search preamble window (first 6 tokens)
-    var searchLimit = Math.min(rawTokens.length - 1, 6);
-
-    for (var i = 0; i < searchLimit; i += 2) {
-        var rawMark = Math.abs(parseInt(rawTokens[i], 10));
-        var rawSpace = Math.abs(parseInt(rawTokens[i + 1], 10));
-
-        for (var c = 0; c < candidateProtocols.length; c++) {
-            var proto = candidateProtocols[c].protocol;
-            if (!proto.header) continue;
-
-            if (Math.abs(rawMark - proto.header.mark) <= tolerance &&
-                Math.abs(rawSpace - proto.header.space) <= tolerance) {
-
-                return {
-                    verified: true,
-                    protocol: proto,
-                    headerMark: proto.header.mark,
-                    headerSpace: proto.header.space,
-                    markIndex: i,
-                    spaceIndex: i + 1,
-                    payloadStart: i + 2
-                };
+        for (var i = 0; i < searchLimit; i += 2) {
+            if (Math.abs(Math.abs(rawHeader[i]) - proto[2]) <= tolerance &&
+                Math.abs(Math.abs(rawHeader[i + 1]) - proto[3]) <= tolerance &&
+                i < matchedOffset) {
+                matchedIndex = p;
+                matchedOffset = i;
+                break;
             }
         }
     }
 
-    return {
-        verified: false,
-        protocol: null,
-        headerMark: 0,
-        headerSpace: 0,
-        payloadStart: 0
-    };
-}
+    if (matchedIndex >= 0) return matchedIndex;
 
-function AnalyzeData(signal, binSize) {
-    var lines = signal.split("\n");
-    var rawDataLine = "";
-
-    // 1. Locate raw data line
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].trim();
-        if (line.indexOf("data:") === 0) {
-            rawDataLine = line.replace("data:", "").trim();
-            break;
-        }
-    }
-
-    if (!rawDataLine) {
-        serial.println("Error: No raw 'data:' line found in signal.");
-        return;
-    }
-
-    var rawTokens = rawDataLine.split(" ").filter(function(t) { return t.length > 0; });
-
-    // 2. Compute and print histogram
-    var histogram = getHistogram(rawTokens, binSize);
-    printHistogram(histogram, "TIMING DISTRIBUTION (Combined)");
-
-    // 3. Fast histogram classification
-    var candidates = classifyFromHistogram(histogram, 250);
-
-    if (candidates.length === 0) {
+    if (candidates === 0) {
         serial.println("\n----------------------------------------");
         serial.println("PROTOCOL IDENTIFICATION: UNKNOWN PROTOCOL");
         serial.println("No known protocol matched the timing histogram.");
         serial.println("----------------------------------------");
+        return -1;
+    }
+
+    var candidateCount = 0;
+    var onlyCandidate = -1;
+    for (var c = 0; c < KNOWN_PROTOCOLS.length; c++) {
+        if (candidates & (1 << c)) {
+            candidateCount++;
+            onlyCandidate = c;
+        }
+    }
+
+    serial.println("\n----------------------------------------");
+    serial.println("PROTOCOL IDENTIFICATION RESULT");
+    serial.println("----------------------------------------");
+    if (candidateCount === 1) {
+        serial.println("Single Histogram Match: " + KNOWN_PROTOCOLS[onlyCandidate][0]);
+    } else {
+        serial.println("Candidate Protocols from Histogram:");
+        for (var c = 0; c < KNOWN_PROTOCOLS.length; c++) {
+            if (candidates & (1 << c)) serial.println("  - " + KNOWN_PROTOCOLS[c][0]);
+        }
+    }
+    serial.println("Header Verification : FAILED (Header sequence not found at stream start)");
+    serial.println("----------------------------------------\n");
+    return -1;
+}
+
+function AnalyzeData(signal, binSize) {
+    var dataStart = signal.indexOf("data:");
+    if (dataStart < 0) {
+        serial.println("Error: No raw 'data:' line found in signal.");
         return;
     }
 
-    // 4. Verify header alignment in raw data
-    var headerCheck = verifyHeaderInRaw(rawTokens, candidates, 250);
+    dataStart += 5;
+    var dataEnd = signal.indexOf("\n", dataStart);
+    if (dataEnd < 0) dataEnd = signal.length;
+
+    // 2. Compute and print histogram
+    // hg is the duration/count histogram used for protocol matching.
+    var hg = getHg(signal, dataStart, dataEnd, binSize);
+    printHg(hg, "TIMING DISTRIBUTION");
+
+    // 3. Classify timings and verify the raw header
+    var protocolIndex = protoClassify(hg, signal, dataStart, dataEnd, 250);
+    if (protocolIndex < 0) return;
 
     // 5. Output Results
     serial.println("\n----------------------------------------");
     serial.println("PROTOCOL IDENTIFICATION RESULT");
     serial.println("----------------------------------------");
 
-    if (headerCheck.verified) {
-        var proto = headerCheck.protocol;
-        serial.println("Matched Protocol : " + proto.name);
-        serial.println("Header Verification : CONFIRMED at index " + headerCheck.markIndex);
-        serial.println("Canonical Header   : Mark " + proto.header.mark + " us, Space " + proto.header.space + " us");
-        serial.println("Encoding Scheme    : " + proto.encoding);
-        serial.println("Expected Bit Count : " + proto.expectedBits);
-
-        // Optional: Perform payload parsing since header alignment is confirmed
-        var decoded = decodePayloadStream(rawTokens, headerCheck, 250);
-        if (decoded && decoded.bitCount > 0) {
-            serial.println("Decoded Bitstream  : " + decoded.bitString);
-            serial.println("Decoded Hex        : 0x" + decoded.hexValue + " (" + decoded.bitCount + " bits)");
-        } else {
-            serial.println("Payload Parsing    : Unable to parse valid bits.");
-        }
-    } else {
-        serial.println("Candidate Guess(es) from Histogram:");
-        for (var c = 0; c < candidates.length; c++) {
-            var cand = candidates[c];
-            serial.println("  - " + cand.protocol.name + " (Confidence: " + cand.confidence + ")");
-        }
-        serial.println("Header Verification : FAILED (Header sequence not found at stream start)");
+    if (protocolIndex >= 0) {
+        var proto = KNOWN_PROTOCOLS[protocolIndex];
+        serial.println("Matched Protocol : " + proto[0]);
+        serial.println("Header Verification : CONFIRMED");
+        serial.println("Canonical Header   : Mark " + proto[2] + " us, Space " + proto[3] + " us");
+        serial.println("Encoding Scheme    : " + proto[1]);
+        serial.println("Expected Bit Count : " + proto[8]);
     }
     serial.println("----------------------------------------\n");
 }
 
 function IrAuto() {
+    var ir = require("ir");
     var IrAutoState = "";
     while (IrAutoState != "Exit") {
         console.log("Waiting for signal...");
@@ -375,6 +334,7 @@ function IrAuto() {
 }
 
 function IrRaw() {
+    var ir = require("ir");
     var IrRawState = "";
     while (IrRawState != "Exit") {
         console.log("Waiting for signal...");
@@ -514,4 +474,18 @@ console.log("Infrared Analyzer " + version);
 var timeout = 200;
 var state = "Main Menu";
 
+function showStartupMessage() {
+    var display = require("display");
+    var textColor = display.color(255, 255, 255);
+    display.fill(display.color(0, 0, 0));
+    display.setTextColor(textColor);
+    display.setTextAlign("center", "middle");
+    display.setTextSize(2);
+    display.drawString("IR Analyzer", display.width() / 2, display.height() / 2 - 12);
+    display.setTextSize(1);
+    display.drawString("Use Serial Monitor", display.width() / 2, display.height() / 2 + 10);
+}
+
+showStartupMessage();
+loadKnownProtocols();
 DrawMainMenu();

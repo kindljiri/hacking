@@ -9,3 +9,4 @@
 
 - [SubGHzMorseMessage](scripts/READMEs/SubGHzMorseMessage.md)
 - [SubGHzMorseBeacon](scripts/READMEs/SubGHzMorseBeacon.md)
+- [IrAnalyzerSerial](scripts/READMEs/IrAnalyzerSerial.md)

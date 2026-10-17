@@ -170,6 +170,9 @@ function bitsToHexBytes(bitString) {
     return hexBytes.join(" ");
 }
 
+version = "v1.0";
+console.log("IrCodeyMonitor " + version + " - Monitor IR signals from Codey Rocky");
+
 //keyboard.setLongPress(true); 
 printMessage("IR Monitor Started. Press ESC to exit.");
 
@@ -239,6 +242,9 @@ while (true) {
                 storage.write(logFile, "Raw Packet: " + rawNECPacket.join(" ") + "\n", "a");
                 storage.write(logFile, "Extracted Bits: " + bits + "\n", "a");
                 storage.write(logFile, "Hex Bytes: " + hexBytes + "\n", "a");
+                console.log("Raw Packet: " + rawNECPacket.join(" "));
+                console.log("Extracted Bits: " + bits);
+                console.log("Hex Bytes: " + hexBytes);
                 rawNECPacket = [];
             }
         }

@@ -424,7 +424,13 @@ def LoudnessMonitor():
                 y_val = 7 - history[x]  # Invert Y so high volume is at top
                 codey.display.set_pixel(x, y_val, True)
         time.sleep(0.01)
- 
+
+def IrBadge():
+    print("IrBadge")
+    codey.display.show("g33k")
+    time.sleep(1)
+
+
 def MainMenu():
     global menu_pos
     menu_pos = "MainMenu"
@@ -433,7 +439,7 @@ def MainMenu():
     #codey.ir.send("MainMenu")
     codey.display.show("MainMenu")
 
-    menu = ["MainMenu", "IRDrive", "Battery", "DiceMenu", "NECIrDecoder", "LoudnessMonitor"]
+    menu = ["MainMenu", "IRDrive", "Battery", "DiceMenu", "NECIrDecoder", "LoudnessMonitor", "IrBadge"]
     menu_index = 0
     pot_value = codey.potentiometer.get_value()
     menu_index = pot_value // 10
@@ -530,7 +536,8 @@ def button_a_cb():
         NECIrDecoder()
     elif menu_pos == "MainMenu.LoudnessMonitor":
         LoudnessMonitor()
-    
+    elif menu_pos == "MainMenu.IrBadge":
+        IrBadge()
 
 @event.button_c_pressed
 def button_c_cb():

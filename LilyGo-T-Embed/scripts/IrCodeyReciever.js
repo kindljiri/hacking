@@ -2,46 +2,6 @@ const ir = require("ir");
 const display = require("display");
 const keyboard = require("keyboard");
 
-const black = display.color(0, 0, 0);
-
-// Decodes Codey Rocky raw microsecond timings back into an ASCII string
-function decodeCodeyRockyIR(raw) {
-    if (!raw || raw.length < 20) return null;
-
-    var bits = [];
-    
-    // Skip index 0 and 1 (header mark/space) and inspect space intervals (odd indices)
-    for (var i = 3; i < raw.length; i += 2) {
-        var spaceDuration = raw[i];
-
-        // Threshold tuning: space > 1000us represents bit 1; short space represents bit 0
-        if (spaceDuration > 1000) {
-            bits.push(1);
-        } else if (spaceDuration > 200) {
-            bits.push(0);
-        }
-    }
-
-    // Convert bit stream into 8-bit ASCII characters
-    var decodedStr = "";
-    for (var b = 0; b < bits.length - 7; b += 8) {
-        var byteVal = 0;
-        for (var bitIndex = 0; bitIndex < 8; bitIndex++) {
-            // Reconstruct byte (assumes LSB first)
-            if (bits[b + bitIndex] === 1) {
-                byteVal |= (1 << bitIndex);
-            }
-        }
-        
-        // Filter readable ASCII printable range (32 to 126) + newline (10)
-        if ((byteVal >= 32 && byteVal <= 126) || byteVal === 10) {
-            decodedStr += String.fromCharCode(byteVal);
-        }
-    }
-
-    return decodedStr;
-}
-
 // Constructor function instead of class
 function TextDisplay() {
     this.lines = [];
@@ -92,11 +52,6 @@ TextDisplay.prototype.render = function() {
 
 // Usage
 var textDisplay = new TextDisplay();
-
-function logMessage(message) {
-    textDisplay.addLine("[" + Date.now() + "] " + message);
-    textDisplay.render();
-}
 
 function printMessage(message) {
     textDisplay.addLine(message);
@@ -170,11 +125,30 @@ function bitsToHexBytes(bitString) {
     return hexBytes.join(" ");
 }
 
-version = "v1.0";
+function decodeHexBytesToText(hexBytes) {
+    if (!hexBytes) return { text: "", value: null };
+
+    var bytes = hexBytes.split(/\s+/);
+    if (bytes.length < 4) return { text: "", value: null };
+
+    // NEC-style payload layout: [ADDR] [~ADDR] [DATA] [~DATA]
+    var payloadHex = bytes[2];
+    var payloadValue = parseInt(payloadHex, 16);
+    if (isNaN(payloadValue)) return { text: "", value: null };
+
+    // Only accept printable ASCII characters.
+    if (payloadValue >= 32 && payloadValue <= 126) {
+        return { text: String.fromCharCode(payloadValue), value: payloadValue };
+    }
+
+    return { text: "", value: payloadValue };
+}
+
+const version = "v1.0.4";
 console.log("IrCodeyMonitor " + version + " - Monitor IR signals from Codey Rocky");
 
 //keyboard.setLongPress(true); 
-printMessage("IR Monitor Started. Press ESC to exit.");
+printMessage("IR Codey Receiver " + version + ". Press ESC to exit.");
 
 var logFile = {
     fs: "sd",
@@ -189,7 +163,7 @@ while (true) {
     }
 
     var signal = ir.readRaw(2000);
-
+    var messageString = "";
     if (signal) {
         storage.write(logFile, "Received Signal:\n", "a");
 
@@ -246,13 +220,26 @@ while (true) {
                 console.log("Extracted Bits: " + bits);
                 console.log("Hex Bytes: " + hexBytes);
                 rawNECPacket = [];
+
+                var decoded = decodeHexBytesToText(hexBytes);
+                if (decoded.text) {
+                    messageString += decoded.text;
+                    storage.write(logFile, "Decoded ASCII value: " + decoded.value + " (" + decoded.text + ")\n", "a");
+                    storage.write(logFile, "Decoded Text from packet: " + decoded.text + "\n", "a");
+                } else if (decoded.value !== null) {
+                    storage.write(logFile, "Decoded ASCII value: " + decoded.value + " (non-printable)\n", "a");
+                }
             }
         }
 
-        
-
         printMessage("Received Signal:");
-        //printMessage(decodeCodeyRockyIR(signal));
+        printMessage(messageString);
+        console.log("Received Message:", messageString);
+        if (messageString) {
+            storage.write(logFile, "Decoded Message: " + messageString + "\n", "a");
+        } else {
+            storage.write(logFile, "Decoded Message: <empty>\n", "a");
+        }
         //console.log("Received IR signal:", signal);
     }
 }

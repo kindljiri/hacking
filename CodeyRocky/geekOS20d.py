@@ -428,6 +428,7 @@ def LoudnessMonitor():
 def IrBadge():
     print("IrBadge: waiting for IR message")
     codey.display.show("g33k")
+    #codey.ir.send("Ir Ready")
 
     while True:
         message = codey.ir.receive()

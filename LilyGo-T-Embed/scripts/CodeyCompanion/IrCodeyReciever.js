@@ -148,7 +148,7 @@ const version = "v1.0.4";
 console.log("IrCodeyMonitor " + version + " - Monitor IR signals from Codey Rocky");
 
 //keyboard.setLongPress(true); 
-printMessage("IR Codey Receiver " + version + ". Press ESC to exit.");
+printMessage("IR Codey Receiver " + version + ". Press encoder or back button to exit.");
 
 var logFile = {
     fs: "sd",
@@ -157,12 +157,12 @@ var logFile = {
 
 while (true) {
     
-    if (keyboard.getEscPress(100)) {
+    if (keyboard.getSelPress() || keyboard.getEscPress()) {
         printMessage("Exiting IR Monitor...");
         break;
     }
 
-    var signal = ir.readRaw(2000);
+    var signal = ir.readRaw(2);
     var messageString = "";
     if (signal) {
         storage.write(logFile, "Received Signal:\n", "a");

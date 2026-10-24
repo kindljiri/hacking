@@ -429,15 +429,24 @@ def IrBadge():
     print("IrBadge: waiting for IR message")
     codey.display.show("g33k")
     #codey.ir.send("Ir Ready")
-
+    message = ""
+    nec_command = 0
+    prev_cmd = 0
     while True:
-        message = codey.ir.receive()
-        if message is not None and message != "":
-            text = str(message).strip()
-            if text:
-                print("IR message: " + text)
-                codey.display.show(text)
+        nec_address, nec_command = codey.ir.receive_remote_code()
+        if nec_command != 0:
+            if prev_cmd != nec_command:
+                prev_cmd = nec_command
+                print("Received NEC command: {}:{}".format(nec_address, nec_command))
+                if nec_command == 10:
+                    codey.display.show(message)
+                    message = ""
+                elif nec_command == 31:
+                    continue  # Ignore this command (used as a separator)
+                else:
+                    message = message + chr(nec_command)
 
+            
 
 
 def MainMenu():

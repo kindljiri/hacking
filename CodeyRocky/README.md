@@ -1,3 +1,5 @@
+[Back](../README.md)
+
 # Codey Rocky
 
 Is nice [toy for kids](https://www.makeblock.com/pages/codey-rocky-robot-toys-for-kids) to learn programing. It suppor makeblock programing. 
@@ -13,8 +15,9 @@ Is small "OS" written in python and currently 2.0.d
 [G33kOS](geekOS.md)
 
 ## Ir Communications
-
-
+[Ir Communications](./IrCommunication.md)
 
 ## Serial Console
+[Serial Console](./USB-Serial.md)
 
+[Back](../README.md)

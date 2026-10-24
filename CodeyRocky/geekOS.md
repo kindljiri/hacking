@@ -1,3 +1,5 @@
+[Back](./README.md)
+
 # Geek OS 2.0.d
 
 Small "OS" written in python for Codey Rocky.
@@ -64,3 +66,5 @@ Show loudness levels as graph on display.
 ## IrBadge
 Show text on display. 4 chars are ok, otherwise it scrolls.
 You can use [IrCodeyBadge](../LilyGo-T-Embed/scripts/READMEs/IrCodeyBadge.md) JS app for Bruce Firmware. 
+
+[Back](./README.md)

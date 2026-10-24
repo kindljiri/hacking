@@ -9,57 +9,12 @@ And it supports [micropython](https://makeblock-micropython-api.readthedocs.io/e
 
 ## G33kOS
 
-Is small "OS" written in python and currently in alpha
-[G33kOS](Codey.py)
+Is small "OS" written in python and currently 2.0.d
+[G33kOS](geekOS.md)
 
-Functions assigned to buttons:
-- A) Infrared Remote controled Menu
-- B) NEC Ir Decoder - display the NEC Codes in format of Address:Command
-- C) No function yet
+## Ir Communications
 
-### Infrared Remote controled Menu
-Offer functionalities controled by Infrared remote. I use this [Emos](EmosIr.md)
 
-You will need to find your Address and Commands, and update code accordingly to use your remote.
-[Howto Set IR Remote Control](HowtoSetIRRC.md)
-I use the Arrows, OK, Exit for basic navigation.
 
-Main Menu:
-- IRDrive
-- Batter
-- Dice
+## Serial Console
 
-#### IRDrive
-Let you drive the Codey Rocky with Ir Remote Control. 
-I use this [Emos](EmosIr.md)
-
-|Button|Function|
-|------|--------|
-|Up Arrow|Go forward|
-|Down Arrow|Go backward|
-|Right Arrow|Turn Right|
-|Left Arrow|Turn Left|
-|Red|Speed -1%|
-|Green|Speed +1%|
-|Yellow|Turn 90° left|
-|Blue|Turn 180° left|
-|Rew (<<)|Speed -1%|
-|Fwd (>>)|Speed +1%|
-|Prev (\|<<)|Speed -10%|
-|Next (>>\|)|Speed +10%|
-|Info|Show actuall speed in %|
-|Menu|Return to menu|
-|Exit|Return to menu|
-|Play|disable obstacle detection for 60 seconds|
-|Stop|enable obstacle detection immediately|
-
-#### Battery
-Provide info on battery % and Voltage.
-With Exit button, it returns you to Main Menu
-
-#### Dice
-Shake the Codey and you got random number from 1 to 6.
-With Exit button, it returns you to Main Menu
-
-### NEC Ir Decoder
-Display the NEC Codes in format of Address:Command
